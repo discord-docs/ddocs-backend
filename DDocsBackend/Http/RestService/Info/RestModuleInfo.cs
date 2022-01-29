@@ -1,75 +1,69 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
+﻿using System.Net;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace DDocsBackend
+namespace DDocsBackend;
+
+internal class RestModuleInfo
 {
-    internal class RestModuleInfo
+    public List<RestMethodInfo> Routes { get; } = new();
+
+    private Type classType { get; }
+
+    private readonly Logger _log;
+
+    public RestModuleInfo(Type type)
     {
-        public List<RestMethodInfo> Routes { get; } = new();
+        _log = Logger.GetLogger<RestModuleInfo>();
 
-        private Type classType { get; }
+        if (!type.IsClass || !type.IsAssignableTo(typeof(RestModuleBase)))
+            throw new ArgumentException("Type must be child class of RestModuleBase");
 
-        private readonly Logger _log;
+        this.classType = type;
 
-        public RestModuleInfo(Type type)
+        var methods = type.GetMethods().Where(x => x.GetCustomAttribute<Route>() != null && x.ReturnType == typeof(Task<RestResult>)).Select(x => (x.GetCustomAttribute<Route>()!, x));
+
+        foreach (var method in methods)
         {
-            _log = Logger.GetLogger<RestModuleInfo>();
+            Routes.Add(new RestMethodInfo(method.Item1, method.x));
+        }
+    }
 
-            if (!type.IsClass || !type.IsAssignableTo(typeof(RestModuleBase)))
-                throw new ArgumentException("Type must be child class of RestModuleBase");
-
-            this.classType = type;
-
-            var methods = type.GetMethods().Where(x => x.GetCustomAttribute<Route>() != null && x.ReturnType == typeof(Task<RestResult>)).Select(x => (x.GetCustomAttribute<Route>()!, x));
-
-            foreach (var method in methods)
+    public bool HasRoute(HttpListenerRequest request)
+        => Routes.Any(x =>
+        {
+            try
             {
-                Routes.Add(new RestMethodInfo(method.Item1, method.x));
+                return x!.IsMatch(request.RawUrl!, request.HttpMethod);
             }
-        }
-
-        public bool HasRoute(HttpListenerRequest request)
-            => Routes.Any(x =>
+            catch (Exception ex)
             {
-                try
-                {
-                    return x!.IsMatch(request.RawUrl!, request.HttpMethod);
-                }
-                catch (Exception ex)
-                {
-                    _log.Critical($"{ex}", Severity.Rest);
-                    return false;
-                }
-            });
-
-        public RestMethodInfo? GetRoute(HttpListenerRequest request)
-            => Routes.FirstOrDefault(x => x.IsMatch(request.RawUrl!, request.HttpMethod));
-
-        public RestModuleBase? GetInstance()
-            => (RestModuleBase?)Activator.CreateInstance(classType);
-
-        public override bool Equals(object? obj)
-        {
-            if (obj is RestModuleInfo other)
-            {
-                return this.classType == other.classType;
+                _log.Critical($"{ex}", Severity.Rest);
+                return false;
             }
-            else return base.Equals(obj);
-        }
+        });
 
-        public override string ToString()
-        {
-            return classType.Name;
-        }
+    public RestMethodInfo? GetRoute(HttpListenerRequest request)
+        => Routes.FirstOrDefault(x => x.IsMatch(request.RawUrl!, request.HttpMethod));
 
-        public override int GetHashCode()
+    public RestModuleBase? GetInstance()
+        => (RestModuleBase?)Activator.CreateInstance(classType);
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is RestModuleInfo other)
         {
-            return base.GetHashCode();
+            return this.classType == other.classType;
         }
+        else return base.Equals(obj);
+    }
+
+    public override string ToString()
+    {
+        return classType.Name;
+    }
+
+    public override int GetHashCode()
+    {
+        return base.GetHashCode();
     }
 }
