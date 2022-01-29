@@ -4,10 +4,8 @@ namespace DDocsBackend;
 
 public class RestResult
 {
-    [JsonProperty("code")]
     public int Code { get; set; }
 
-    [JsonProperty("data")]
     public object? Data { get; set; } = null;
 
     internal bool TakeAction { get; set; } = true;
