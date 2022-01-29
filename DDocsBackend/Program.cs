@@ -1,2 +1,9 @@
-﻿// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
+﻿using DDocsBackend;
+
+Logger.AddStream(Console.OpenStandardOutput(), StreamType.StandardOut);
+Logger.AddStream(Console.OpenStandardError(), StreamType.StandardError);
+
+// TODO: Configure port?
+var httpServer = new HttpServer(4048);
+
+await Task.Delay(-1);
