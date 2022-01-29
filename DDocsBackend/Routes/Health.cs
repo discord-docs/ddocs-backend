@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace DDocsBackend.Routes;
 
-namespace DDocsBackend.Routes
+public class Health : RestModuleBase
 {
-    public class Health : RestModuleBase
+    [Route("/health", "GET")]
+    public Task<RestResult> ExecuteHealthAsync()
     {
-        [Route("/health", "GET")]
-        public Task<RestResult> ExecuteHealthAsync()
-        {
-            return Task.FromResult(RestResult.OK);
-        }
+        return Task.FromResult(RestResult.OK);
     }
 }
