@@ -31,6 +31,6 @@ namespace DDocsBackend.Data.Models
         /// </summary>
         public bool Deprecated { get; set; } = false;
 
-        public List<Summary>? RelatedSummaries { get; set; };
+        public List<Summary>? RelatedSummaries { get; set; }
     }
 }
