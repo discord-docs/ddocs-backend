@@ -30,8 +30,10 @@ namespace DDocsBackend.Routes.Authentication
             Response.SetCookie(new System.Net.Cookie("r_", result.Value.newRefresh)
             {
                 Expires = DateTime.UtcNow.AddDays(7),
-                //Domain = "ddocs.io",
-                //Secure = true
+#if DEBUG == false
+                Domain = "ddocs.io",
+                Secure = true
+#endif
             });
 
             return RestResult.OK.WithData(new
