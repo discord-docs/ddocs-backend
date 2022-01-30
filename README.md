@@ -2,6 +2,15 @@
 The backend service for [DDocs](https://ddocs.io)
 
 
+## Enviorment variables
+|        Name       | Description                                          |
+|:-----------------:|------------------------------------------------------|
+| CONNECTION_STRING | The postgres connection string                       |
+|     JWT_SECRET    | The secret key for generating JWT tokens             |
+|     CLIENT_ID     | The discord application client id used for OAuth     |
+|   CLIENT_SECRET   | The discord application client secret used for OAuth |
+| REDIRECT_URI      | The discord application redirect uri used for OAuth  |
+
 ## Working with EF Core
 This project uses EF Core to communicate between the application and postgres. To use this system propery you will need a few prerequisites:
 
