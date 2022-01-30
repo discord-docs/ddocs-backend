@@ -2,7 +2,7 @@
 The backend service for [DDocs](https://ddocs.io)
 
 
-## Enviorment variables
+## Enviorment Variables
 |        Name       | Description                                          |
 |:-----------------:|------------------------------------------------------|
 | CONNECTION_STRING | The postgres connection string                       |
@@ -10,6 +10,53 @@ The backend service for [DDocs](https://ddocs.io)
 |     CLIENT_ID     | The discord application client id used for OAuth     |
 |   CLIENT_SECRET   | The discord application client secret used for OAuth |
 | REDIRECT_URI      | The discord application redirect uri used for OAuth  |
+
+## Defining Routes
+
+The backend service uses a custom wrapper for the default `HttpListener` to implement route modules.
+
+### Creating new routes
+
+```cs
+public class YourClass : RestModuleBase
+{
+  [Route("/your/uri/path", "GET")
+  public async Task<RestResult> ExecuteAsync()
+  {
+    // code
+  }
+}
+```
+#### Requirements
+- Your module must inherit `RestModuleBase`.
+- Your method must contain a `Route` attribute specifing the route path and the HTTP method.
+
+#### Optional
+- Your method can have a `RequireAuthentication` attribute, this locks execution to client with valid jwt authentication.
+- Your method can be a regular expression by specifying `isRegex: true` in the `Route` attribute
+- Your method can contain route parameters by defining them like so:
+  ```cs
+  [Route("/your/{parameter}", "GET")
+  public async Task<RestResult> ExecuteAsync(string parameter)
+  ```
+  One note on this is that your parameter names must match up, the type can be any default type (like int, long, string, etc).
+ 
+Each route must return a `RestResult` which holds the status code and optional json payload to return to the request.
+
+### The Module Base
+The `RestModuleBase` contains useful properties that use can use during your request:
+
+|          Name         | Description                                                                                    |
+|:---------------------:|------------------------------------------------------------------------------------------------|
+|        Context        | The raw HTTP Context                                                                           |
+|       RestServer      | The HTTP server instance                                                                       |
+|        Request        | The raw request                                                                                |
+|        Response       | The raw response object                                                                        |
+| AuthenticationService | The authentication service                                                                     |
+| DiscordOAuthHelper    | The OAuth helper                                                                               |
+| Authentication        | The current authentication state for the request, can be null if no authentication is provided |
+| ModuleInfo            | The raw module info                                                                            |
+
 
 ## Working with EF Core
 This project uses EF Core to communicate between the application and postgres. To use this system propery you will need a few prerequisites:
