@@ -122,37 +122,37 @@ internal class RestMethodInfo
     public async Task<RestResult> ExecuteAsync(RestModuleBase? instance, params object[] parameters)
         => await RunPreconditionsAsync(instance!) ?? await((Task<RestResult>?)this._info.Invoke(instance, parameters)!).ConfigureAwait(false);
 
+    private async Task PopulateAuthenticationAsync(RestModuleBase instance)
+    {
+        var authService = _provider.GetRequiredService<AuthenticationService>();
+
+        // check the header
+        var jwt = instance.Request.Headers["Authorization"];
+
+        if (jwt == null)
+            return;
+
+        jwt = jwt.Replace("Bearer ", "");
+
+        try
+        {
+            var auth = await authService.GetAuthenticationAsync(jwt);
+
+            if (auth == null)
+                return;
+
+            instance.Authentication = auth;
+        }
+        catch { }
+    }
+
     private async Task<RestResult?> RunPreconditionsAsync(RestModuleBase instance)
     {
-        if (_requirePermissions)
+        await PopulateAuthenticationAsync(instance);
+
+        if (_requirePermissions && instance.Authentication == null)
         {
-            var authService = _provider.GetRequiredService<AuthenticationService>();
-
-            // check the header
-            var jwt = instance.Request.Headers["Authorization"];
-
-            if (jwt == null)
-                return RestResult.Unauthorized;
-
-            jwt = jwt.Replace("Bearer ", "");
-
-            try
-            {
-                var auth = await authService.GetAuthenticationAsync(jwt);
-
-                if (auth == null)
-                    return RestResult.Unauthorized;
-
-                instance.Authentication = auth;
-            }
-            catch (TokenExpiredException)
-            {
-                return RestResult.Unauthorized.WithData(new { reason = "The token you provided has expired" });
-            }
-            catch(SignatureVerificationException)
-            {
-                return RestResult.Unauthorized.WithData(new { reason = "The token you provided is invalid" });
-            }
+            return RestResult.Unauthorized;
         }
 
         return null;
