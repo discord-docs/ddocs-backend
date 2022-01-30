@@ -4,14 +4,16 @@ namespace DDocsBackend;
 
 public class RestModuleBase
 {
-    public HttpListenerContext? Context { get; private set; }
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+    public HttpListenerContext Context { get; private set; }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
     public HttpServer? RestServer { get; private set; }
 
-    public HttpListenerRequest? Request
-        => Context?.Request;
-    public HttpListenerResponse? Response
-        => Context?.Response;
+    public HttpListenerRequest Request
+        => Context.Request;
+    public HttpListenerResponse Response
+        => Context.Response;
 
     internal RestModuleInfo? ModuleInfo { get; private set; }
 

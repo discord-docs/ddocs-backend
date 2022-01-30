@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "DDocsBackend": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "CONNECTION_STRING": "User ID=postgres;Password=123;Host=host.docker.internal;Port=5432;Database=ddocs;"
+      }
+    }
+  }
+}
