@@ -3,10 +3,20 @@ using System.Text.RegularExpressions;
 
 namespace DDocsBackend;
 
+/// <summary>
+///     Represents a methods info.
+/// </summary>
 internal class RestMethodInfo
 {
+    /// <summary>
+    ///     Gets the route name for this method.
+    /// </summary>
     public string RouteName
         => _route.Name;
+
+    /// <summary>
+    ///     Gets the HTTP method for this method.
+    /// </summary>
     public string RouteMethod
         => _route.Method;
 
@@ -17,6 +27,11 @@ internal class RestMethodInfo
     private readonly Dictionary<(int index, string name), Type> _parameters = new();
     private readonly Logger _log;
 
+    /// <summary>
+    ///     Creates a new instance of <see cref="RestMethodInfo"/>.
+    /// </summary>
+    /// <param name="route">The route attribute instance.</param>
+    /// <param name="info">The reflection method info.</param>
     public RestMethodInfo(Route route, MethodInfo info)
     {
         _log = Logger.GetLogger<RestMethodInfo>();
@@ -35,14 +50,23 @@ internal class RestMethodInfo
             _parameters.Add((i, param.Name!), param.ParameterType);
         }
     }
-
+    
+    /// <summary>
+    ///     Determines if a provided route and method is a match to this method.
+    /// </summary>
+    /// <param name="route">The raw uri route.</param>
+    /// <param name="method">The HTTP method.</param>
     public bool IsMatch(string route, string method)
     {
         if (_route.IsRegex && RouteMethod == method)
             return Regex.IsMatch(_route.Name, route);
         else return _routeParamRegex!.IsMatch(route) && method == RouteMethod;
     }
-
+    
+    /// <summary>
+    ///     Gets all of the parameters' converted objects in the given route.
+    /// </summary>
+    /// <param name="route">The route attribute instance.</param>
     public object[]? GetConvertedParameters(string route)
     {
         if (_route.IsRegex)
@@ -83,8 +107,21 @@ internal class RestMethodInfo
         return arr;
     }
 
+    /// <summary>
+    ///     Executes this method.
+    /// </summary>
+    /// <param name="instance">The instance of the module.</param>
+    /// <param name="parameters">The parameters for the method if any.</param>
+    /// <returns>The RestResult of this method.</returns>
     public Task<RestResult> Execute(object instance, params object[] parameters)
         => (Task<RestResult>?)_info.Invoke(instance, parameters)!;
+
+    /// <summary>
+    ///     Executes the route method as an an invokable asynchronous Task.
+    /// </summary>
+    /// <param name="instance">The route as an object instance.</param>
+    /// <param name="parameters">The argument signature of the given route object.</param>
+    /// <returns>The RestResult of this method.</returns>
     public async Task<RestResult> ExecuteAsync(object instance, params object[] parameters)
         => await ((Task<RestResult>?)this._info.Invoke(instance, parameters)!).ConfigureAwait(false);
 
@@ -95,6 +132,10 @@ internal class RestMethodInfo
         return new Regex($"^{val}(?>/|)$".Replace("/", "\\/"));
     }
 
+    /// <summary>
+    ///     Gets the key and value of parameters in the given route.
+    /// </summary>
+    /// <param name="route">The route attribute instance.</param>
     private Dictionary<string, string> GetRouteParams(string route)
     {
         if (_routeParamRegex == null)

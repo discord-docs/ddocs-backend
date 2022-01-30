@@ -1,5 +1,6 @@
 ﻿using DDocsBackend.Data.Context;
 using Microsoft.EntityFrameworkCore;
+using DDocsBackend.Data.Models;
 
 namespace DDocsBackend.Data
 {
@@ -13,6 +14,13 @@ namespace DDocsBackend.Data
         public DataAccessLayer(IDbContextFactory<DDocsContext> contextFactory)
         {
             _contextFactory = contextFactory;
+        }
+
+        public async Task<Author?> GetAuthorAsync(ulong userId)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            return await context.Authors.FindAsync(userId).ConfigureAwait(false);
         }
     }
 }

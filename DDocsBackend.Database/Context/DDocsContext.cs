@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DDocsBackend.Data.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,10 @@ namespace DDocsBackend.Data.Context
     /// </summary>
     public class DDocsContext : DbContext
     {
+        public DbSet<Event> Events { get; set; }
+        public DbSet<Summary> Summaries { get; set; }
+        public DbSet<Author> Authors { get; set; }
+
         /// <summary>
         ///     Initializes a new instance of the <see cref="DDocsContext"/> class.
         /// </summary>
@@ -19,6 +24,11 @@ namespace DDocsBackend.Data.Context
         public DDocsContext(DbContextOptions options)
             : base(options)
         {
+        }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            // todo
         }
     }
 }

@@ -9,7 +9,7 @@ namespace DDocsBackend.Data.Models
     /// <summary>
     ///     Represents a type for a <see cref="Summary"/>
     /// </summary>
-    internal enum SummaryType
+    public enum SummaryType
     {
         /// <summary>
         ///     A feature summary.

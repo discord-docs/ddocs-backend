@@ -62,13 +62,19 @@ public class RestResult
             return a;
         }
     }
-
+    
+    /// <summary>
+    ///     Represents JSON from an object.
+    /// </summary>
     public RestResult WithData(object? data)
     {
         this.Data = data;
         return this;
     }
 
+    /// <summary>
+    ///     Represents a code as a status response.
+    /// </summary>
     public RestResult WithCode(int code)
     {
         this.Code = code;

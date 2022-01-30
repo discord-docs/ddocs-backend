@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,8 +10,14 @@ namespace DDocsBackend.Data.Models
     /// <summary>
     ///     An object representing information summarized from an event.
     /// </summary>
-    internal class Summary
+    public class Summary
     {
+        /// <summary>
+        ///     Gets or sets the unique identifier for this summary.
+        /// </summary>
+        [Key]
+        public Guid SummaryId { get; set; }
+
         /// <summary>
         ///     Gets or sets the type of this summary.
         /// </summary>
