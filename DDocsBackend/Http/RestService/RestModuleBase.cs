@@ -2,6 +2,7 @@
 using DDocsBackend.Helpers;
 using DDocsBackend.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using System.Net;
 
 namespace DDocsBackend;
@@ -27,6 +28,9 @@ public class RestModuleBase
 
     public Authentication? Authentication { get; set; }
 
+    public JsonSerializer Serializer
+        => RestServer!.Provider.GetRequiredService<JsonSerializer>();
+
     internal RestModuleInfo? ModuleInfo { get; private set; }
 
     internal RestModuleBase InitializeModule(HttpListenerContext context, RestModuleInfo info, HttpServer server)
@@ -35,6 +39,26 @@ public class RestModuleBase
         this.ModuleInfo = info;
         this.RestServer = server;
         return this;
+    }
+
+    protected TReturn? GetBody<TReturn>() where TReturn : class
+    {
+        if (!Request.HasEntityBody)
+            return null;
+
+        try
+        {
+            using(var sr = new StreamReader(Request.InputStream))
+            using(var reader = new JsonTextReader(sr))
+            {
+                return Serializer.Deserialize<TReturn>(reader);
+            }
+        }
+        catch(Exception x)
+        {
+            Logger.GetLogger<RestModuleBase>().Warn("Failed to read body: ", exception: x);
+            return null;
+        }
     }
 
     public override bool Equals(object? obj)

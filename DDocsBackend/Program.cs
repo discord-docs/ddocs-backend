@@ -7,6 +7,8 @@ using DDocsBackend.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using DDocsBackend.Services;
 using DDocsBackend.Helpers;
+using Newtonsoft.Json;
+using DDocsBackend.Converters;
 
 Logger.AddStream(Console.OpenStandardOutput(), StreamType.StandardOut);
 Logger.AddStream(Console.OpenStandardError(), StreamType.StandardError);
@@ -28,6 +30,7 @@ try
     {
         // configure our services
         services
+        .AddSingleton(x => new JsonSerializer { ContractResolver = new DDocsContractResolver() })
         .AddDbContextFactory<DDocsContext>(x => 
             x.UseNpgsql(context.Configuration["CONNECTION_STRING"]))
         .AddSingleton<DataAccessLayer>()

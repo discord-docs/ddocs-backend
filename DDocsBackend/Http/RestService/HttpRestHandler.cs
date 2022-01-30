@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using System.Net;
 using System.Reflection;
 using System.Text;
@@ -11,16 +12,17 @@ internal class HttpRestHandler
     private int cacheSize = 15;
     private List<RestModuleInfo> Modules { get; } = new();
 
-    private HttpServer Server { get; }
-
+    private readonly HttpServer _server;
     private readonly Logger _log;
+    private readonly JsonSerializer _serializer;
 
     public HttpRestHandler(HttpServer server)
     {
+        _serializer = server.Provider.GetRequiredService<JsonSerializer>();
         _log = Logger.GetLogger<HttpRestHandler>();
 
         _log.Info("Creating Rest handler...", Severity.Rest);
-        this.Server = server;
+        this._server = server;
         LoadRoutes();
         _log.Info($"Rest handler {Logger.BuildColoredString("Online", ConsoleColor.Green)}! Loaded {Modules.Count} Modules with {Modules.Select(x => x.Routes.Count).Sum()} routes!", Severity.Rest);
     }
@@ -31,7 +33,7 @@ internal class HttpRestHandler
 
         foreach (var module in modules)
         {
-            this.Modules.Add(new RestModuleInfo(module, Server.Provider));
+            this.Modules.Add(new RestModuleInfo(module, _server.Provider));
         }
     }
 
@@ -109,7 +111,7 @@ internal class HttpRestHandler
             return 404;
         }
 
-        var moduleBase = module.InitializeModule(context, info, Server);
+        var moduleBase = module.InitializeModule(context, info, _server);
 
         var route = info.GetRoute(context.Request);
 
@@ -157,9 +159,11 @@ internal class HttpRestHandler
                 context.Response.ContentType = "application/json";
                 context.Response.ContentEncoding = Encoding.UTF8;
 
-                string json = JsonConvert.SerializeObject(result.Data);
-
-                context.Response.OutputStream.Write(Encoding.UTF8.GetBytes(json));
+                using (var sw = new StreamWriter(context.Response.OutputStream)) 
+                using(var writer = new JsonTextWriter(sw))
+                {
+                    _serializer.Serialize(writer, result.Data);
+                }    
             }
 
             context.Response.StatusCode = result.Code;
