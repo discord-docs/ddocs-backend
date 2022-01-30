@@ -18,6 +18,8 @@ public class HttpServer : IHostedService
     {
         _log = Logger.GetLogger<HttpServer>();
 
+        Provider = provider;
+
         var rawPort = config["PORT"];
         var port = 8080;
 
@@ -42,8 +44,6 @@ public class HttpServer : IHostedService
         _handler = new(this);
 
         _port = port;
-
-        Provider = provider;
     }
 
 

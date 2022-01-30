@@ -143,7 +143,10 @@ internal class RestMethodInfo
 
             instance.Authentication = auth;
         }
-        catch { }
+        catch(Exception x) 
+        {
+            Logger.GetLogger<RestMethodInfo>().Warn("Failed to get auth", exception: x);
+        }
     }
 
     private async Task<RestResult?> RunPreconditionsAsync(RestModuleBase instance)

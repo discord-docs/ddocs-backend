@@ -37,6 +37,13 @@ namespace DDocsBackend.Data
             return await context.Authentication.FirstOrDefaultAsync(x => x.JWTRefreshToken == refreshToken);
         }
 
+        public async Task<DiscordOAuthAuthentication?> GetDiscordOAuthAsync(ulong userId)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            return await context.DiscordAuthentication.FindAsync(userId).ConfigureAwait(false);
+        }
+
         public async Task<Authentication> CreateAuthenticationAsync(string? discordAccessToken, string? discordRefreshToken, DateTimeOffset discordExpiresAt, string jwtRefreshToken, DateTimeOffset jwtRefrshValidUntil, ulong userId)
         {
             using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
@@ -46,16 +53,17 @@ namespace DDocsBackend.Data
                 UserId = userId,
                 JWTRefreshToken = jwtRefreshToken,
                 RefreshExpiresAt = jwtRefrshValidUntil,
-                DiscordAuthentication = new DiscordOAuthAuthentication()
-                {
-                    AccessToken = discordAccessToken,
-                    ExpiresAt = discordExpiresAt,
-                    RefreshToken = discordRefreshToken,
-                    UserId = userId
-                }
-            });
+            }).ConfigureAwait(false);
 
-            await context.SaveChangesAsync();
+            await context.AddAsync(new DiscordOAuthAuthentication()
+            {
+                AccessToken = discordAccessToken,
+                ExpiresAt = discordExpiresAt,
+                RefreshToken = discordRefreshToken,
+                UserId = userId
+            }).ConfigureAwait(false);
+
+            await context.SaveChangesAsync().ConfigureAwait(false);
 
             return entity.Entity;
         }
@@ -72,7 +80,7 @@ namespace DDocsBackend.Data
             authentication.JWTRefreshToken = refreshToken;
             authentication.RefreshExpiresAt = expiresAt;
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync().ConfigureAwait(false);
 
             return authentication;
         }

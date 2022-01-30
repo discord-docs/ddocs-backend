@@ -36,12 +36,12 @@ namespace DDocsBackend.Data.Models
         /// <summary>
         ///     Gets or sets the authors that contributed to this events summary.
         /// </summary>
-        public List<Author>? Authors { get; set; }
+        public virtual List<Author>? Authors { get; set; }
 
         /// <summary>
         ///     Gets or sets the summaries for this event.
         /// </summary>
-        public List<Summary>? Summaries { get; set; }
+        public virtual List<Summary>? Summaries { get; set; }
 
         /// <summary>
         ///     Gets or sets the thumbnail for this event.

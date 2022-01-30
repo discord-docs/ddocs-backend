@@ -1,0 +1,75 @@
+openapi: 3.1.0
+info:
+  title: DDocs API
+  version: '1.0'
+servers:
+  - url: 'https://api.ddocs.io'
+    description: Main site
+paths:
+  /auth/login:
+    get:
+      summary: Login
+      tags: []
+      responses:
+        '200':
+          description: The authentication was successful
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              description: The refresh cookie with the name r_
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: The JWT Token
+        '400':
+          description: 'The `code` parameter couldn''t be validated '
+      operationId: get-auth-login
+      description: Accepts a Discord OAuth code and creates a new jwt session and refresh token for the user
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: code
+          description: The discord OAuth code
+    parameters: []
+  /auth/refresh:
+    get:
+      summary: Refresh
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: The new JWT token
+        '400':
+          description: |
+            This can happen for multiple reasons:
+            - The JWT token used for this request was still valid.
+            - The refresh token provided was invalid.
+        '401':
+          description: No refresh token was provided.
+      operationId: get-auth-refresh
+      description: Refreshes a JWT token
+      parameters:
+        - schema:
+            type: string
+          in: header
+          name: Cookie
+          description: The provided r_ cookie to refresh with
+components:
+  schemas: {}
+  securitySchemes:
+    JWT:
+      type: http
+      scheme: bearer

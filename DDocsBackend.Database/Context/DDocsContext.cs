@@ -17,6 +17,7 @@ namespace DDocsBackend.Data.Context
         public DbSet<Summary> Summaries { get; set; }
         public DbSet<Author> Authors { get; set; }
         public DbSet<Authentication> Authentication { get; set; }
+        public DbSet<DiscordOAuthAuthentication> DiscordAuthentication { get; set; }
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="DDocsContext"/> class.
