@@ -12,7 +12,7 @@ namespace DDocsBackend.Data.Context
     /// <summary>
     ///     Represents a factory for creating <see cref="DDocsContext"/>.
     /// </summary>
-    internal class DDocsContextFactory : IDesignTimeDbContextFactory<DDocsContext>
+    public class DDocsContextFactory : IDesignTimeDbContextFactory<DDocsContext>
     {
         /// <inheritdoc/>
         public DDocsContext CreateDbContext(string[] args)

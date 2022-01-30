@@ -14,7 +14,7 @@ namespace DDocsBackend.Data.Models
         /// <summary>
         ///     Gets or sets the name of the feature.
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         ///     Gets or sets the optional description of the feature.

@@ -1,20 +1,36 @@
-﻿using System.Diagnostics;
+﻿using DDocsBackend.Data;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using System.Diagnostics;
 using System.Net;
 
 namespace DDocsBackend;
 
-public class HttpServer
+public class HttpServer : IHostedService
 {
     private readonly HttpListener _listener;
     private readonly HttpRestHandler _handler;
     private readonly Logger _log;
-
-    public HttpServer(int port)
+    private readonly int _port;
+    public HttpServer(IConfiguration config, DataAccessLayer dataAccessLayer)
     {
         _log = Logger.GetLogger<HttpServer>();
 
+        var rawPort = config["PORT"];
+        var port = 8080;
+
+        if(rawPort == null)
+        {
+            _log.Warn("No http port found in the config, using 8080 as default");
+        }
+        else if(!int.TryParse(rawPort, out port))
+        {
+            _log.Error("Port env variable was not a number!");
+        }
+
         _log.Info("Creating HTTP Server...", Severity.Rest);
         _listener = new HttpListener();
+
 #if DEBUG
         _listener.Prefixes.Add($"http://127.0.0.1:{port}/");
 #else
@@ -23,10 +39,7 @@ public class HttpServer
 
         _handler = new(this);
 
-        _listener.Start();
-
-        _ = Task.Run(async () => await HandleRequest().ConfigureAwait(false));
-        _log.Info($"Http server <Green>Online</Green>! listening on port {port}", Severity.Rest);
+        _port = port;
     }
 
 
@@ -70,5 +83,22 @@ public class HttpServer
                 return Logger.BuildColoredString(method, ConsoleColor.Gray);
 
         }
+    }
+
+    public Task StartAsync(CancellationToken cancellationToken)
+    {
+        _listener.Start();
+
+        _ = Task.Run(async () => await HandleRequest().ConfigureAwait(false));
+        _log.Info($"Http server <Green>Online</Green>! listening on port {_port}", Severity.Rest);
+
+        return Task.CompletedTask;
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        _listener.Stop();
+
+        return Task.CompletedTask;
     }
 }
