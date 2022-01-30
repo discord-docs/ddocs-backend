@@ -32,7 +32,7 @@ try
             x.UseNpgsql(context.Configuration["CONNECTION_STRING"]))
         .AddSingleton<DataAccessLayer>()
         .AddSingleton<DiscordOAuthHelper>()
-        .AddHostedService<AuthenticationService>()
+        .AddSingleton<AuthenticationService>()
         .AddHostedService<HttpServer>();
     })
     .UseConsoleLifetime();

@@ -1,6 +1,7 @@
 ﻿using DDocsBackend.Data;
 using DDocsBackend.Data.Models;
 using DDocsBackend.RestModels;
+using Discord.Rest;
 using JWT;
 using JWT.Algorithms;
 using JWT.Exceptions;
@@ -17,7 +18,7 @@ using System.Threading.Tasks;
 
 namespace DDocsBackend.Services
 {
-    public class AuthenticationService : IHostedService
+    public class AuthenticationService
     {
         private readonly string _jwtSecret;
         private readonly Logger _log;
@@ -75,31 +76,64 @@ namespace DDocsBackend.Services
             return true;
         }
 
-        public async Task<string?> ApplyRefreshTokenAsync(Authentication auth)
+        public async Task<(string newRefresh, string newJWT)?> ApplyRefreshTokenAsync(string refresh)
+        {
+            var auth = await _dataAccessLayer.GetAuthenticationAsync(refresh).ConfigureAwait(false);
+
+            if (auth == null)
+                return null;
+
+            return await ApplyRefreshTokenAsync(auth).ConfigureAwait(false);
+        }
+
+        public async Task<(string newRefresh, string newJWT)?> ApplyRefreshTokenAsync(Authentication auth)
         {
             var newToken = GenerateRefreshToken();
 
-            await _dataAccessLayer.ApplyJWTRefreshAsync(auth.UserId, newToken, DateTime.UtcNow.AddDays(7));
+            var result = await _dataAccessLayer.ApplyJWTRefreshAsync(auth.UserId, newToken, DateTime.UtcNow.AddDays(7));
 
-            return Encode(new JWTPayload
+            if (result == null)
+                return null;
+
+            var jwt = Encode(new JWTPayload
             {
                 ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(5),
                 IssuedAt = DateTimeOffset.UtcNow,
                 UserId = auth.UserId,
             });
+
+            return (newToken, jwt);
         }
 
-        public async Task<Authentication> CreateAuthenticationAsync(AccessTokenResponse oauth, ulong userId)
+        public async Task<(Authentication Authentication, string Token)> CreateAuthenticationAsync(AccessTokenResponse oauth)
         {
             var refresh = GenerateRefreshToken();
 
-            return await _dataAccessLayer.CreateAuthenticationAsync(
-                oauth.AccessToken, 
-                oauth.RefreshToken, 
-                DateTimeOffset.UtcNow.AddSeconds(oauth.ExpiresIn), 
-                refresh, 
+            ulong userId = 0;
+
+            using(var discordClient = new DiscordRestClient())
+            {
+                await discordClient.LoginAsync(Discord.TokenType.Bearer, oauth.AccessToken);
+
+                userId = discordClient.CurrentUser.Id;
+            }
+
+            var auth = await _dataAccessLayer.CreateAuthenticationAsync(
+                oauth.AccessToken,
+                oauth.RefreshToken,
+                DateTimeOffset.UtcNow.AddSeconds(oauth.ExpiresIn),
+                refresh,
                 DateTimeOffset.UtcNow.AddDays(7),
                 userId);
+
+            var jwt = Encode(new JWTPayload
+            {
+                ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(10),
+                IssuedAt = DateTimeOffset.UtcNow,
+                UserId = userId
+            });
+
+            return (auth, jwt);
         }
 
         private string GenerateRefreshToken()
@@ -109,7 +143,7 @@ namespace DDocsBackend.Services
                 byte[] tokenData = new byte[32];
                 rng.GetBytes(tokenData);
 
-                return $"r_{Convert.ToBase64String(tokenData)}";
+                return $"{Convert.ToBase64String(tokenData)}";
             }
         }
 
@@ -120,11 +154,6 @@ namespace DDocsBackend.Services
         /// <exception cref="SignatureVerificationException"></exception>
         public TResult Decode<TResult>(string token)
             => _decoder.DecodeToObject<TResult>(token, _jwtSecret, true);
-
-        #region IHostedService
-        public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
-        public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
-        #endregion
     }
 
     public class JsonConvertSerializer : IJsonSerializer

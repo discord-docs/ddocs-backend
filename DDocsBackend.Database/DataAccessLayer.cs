@@ -30,6 +30,13 @@ namespace DDocsBackend.Data
             return await context.Authentication.FindAsync(userId).ConfigureAwait(false);
         }
 
+        public async Task<Authentication?> GetAuthenticationAsync(string refreshToken)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            return await context.Authentication.FirstOrDefaultAsync(x => x.JWTRefreshToken == refreshToken);
+        }
+
         public async Task<Authentication> CreateAuthenticationAsync(string? discordAccessToken, string? discordRefreshToken, DateTimeOffset discordExpiresAt, string jwtRefreshToken, DateTimeOffset jwtRefrshValidUntil, ulong userId)
         {
             using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
@@ -43,7 +50,8 @@ namespace DDocsBackend.Data
                 {
                     AccessToken = discordAccessToken,
                     ExpiresAt = discordExpiresAt,
-                    RefreshToken = discordRefreshToken
+                    RefreshToken = discordRefreshToken,
+                    UserId = userId
                 }
             });
 

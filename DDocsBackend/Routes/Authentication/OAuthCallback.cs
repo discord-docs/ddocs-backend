@@ -8,10 +8,27 @@ namespace DDocsBackend.Routes.Authentication
 {
     public class OAuthCallback : RestModuleBase
     {
-        [Route("/auth/login?q={code}", "GET")]
-        public Task<RestResult> ExecuteAsync(string code)
+        [Route("/auth/login?code={code}", "GET")]
+        public async Task<RestResult> ExecuteAsync(string code)
         {
-            return Task.FromResult(RestResult.OK);
+            var tokenResult = await DiscordOAuthHelper.GetTokenAsync(code);
+
+            if (tokenResult == null)
+                return RestResult.BadRequest;
+
+            var result = await AuthenticationService.CreateAuthenticationAsync(tokenResult);
+
+            Response.SetCookie(new System.Net.Cookie("r_", result.Authentication.JWTRefreshToken)
+            {
+                Expires = DateTime.UtcNow.AddDays(7),
+                //Domain = "ddocs.io",
+                //Secure = true
+            });
+
+            return RestResult.OK.WithData(new
+            {
+                token = $"{result.Token}"
+            });
         }
     }
 }

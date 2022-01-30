@@ -49,7 +49,7 @@ namespace DDocsBackend.Helpers
 
                 client.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/x-www-form-urlencoded");
 
-                var result = await client.PostAsync($"https://discord.com/api/v9?{queryString}", new FormUrlEncodedContent(queryString));
+                var result = await client.PostAsync($"https://discord.com/api/oauth2/token", new FormUrlEncodedContent(queryString));
 
                 if (result.IsSuccessStatusCode)
                 {
@@ -75,7 +75,7 @@ namespace DDocsBackend.Helpers
 
                 client.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/x-www-form-urlencoded");
 
-                var result = await client.PostAsync($"https://discord.com/api/v9?{queryString}", new FormUrlEncodedContent(queryString));
+                var result = await client.PostAsync($"https://discord.com/api/oauth2/token", new FormUrlEncodedContent(queryString));
 
                 if (result.IsSuccessStatusCode)
                 {
