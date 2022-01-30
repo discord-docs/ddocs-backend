@@ -22,5 +22,51 @@ namespace DDocsBackend.Data
 
             return await context.Authors.FindAsync(userId).ConfigureAwait(false);
         }
+
+        public async Task<Authentication?> GetAuthenticationAsync(ulong userId)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            return await context.Authentication.FindAsync(userId).ConfigureAwait(false);
+        }
+
+        public async Task<Authentication> CreateAuthenticationAsync(string? discordAccessToken, string? discordRefreshToken, DateTimeOffset discordExpiresAt, string jwtRefreshToken, DateTimeOffset jwtRefrshValidUntil, ulong userId)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            var entity = await context.AddAsync(new Authentication
+            {
+                UserId = userId,
+                JWTRefreshToken = jwtRefreshToken,
+                RefreshExpiresAt = jwtRefrshValidUntil,
+                DiscordAuthentication = new DiscordOAuthAuthentication()
+                {
+                    AccessToken = discordAccessToken,
+                    ExpiresAt = discordExpiresAt,
+                    RefreshToken = discordRefreshToken
+                }
+            });
+
+            await context.SaveChangesAsync();
+
+            return entity.Entity;
+        }
+
+        public async Task<Authentication?> ApplyJWTRefreshAsync(ulong userId, string refreshToken, DateTimeOffset expiresAt)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            var authentication = await context.Authentication.FindAsync(userId).ConfigureAwait(false);
+
+            if (authentication == null)
+                return null;
+
+            authentication.JWTRefreshToken = refreshToken;
+            authentication.RefreshExpiresAt = expiresAt;
+
+            await context.SaveChangesAsync();
+
+            return authentication;
+        }
     }
 }

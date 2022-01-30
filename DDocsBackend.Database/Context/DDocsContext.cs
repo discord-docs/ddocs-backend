@@ -16,6 +16,7 @@ namespace DDocsBackend.Data.Context
         public DbSet<Event> Events { get; set; }
         public DbSet<Summary> Summaries { get; set; }
         public DbSet<Author> Authors { get; set; }
+        public DbSet<Authentication> Authentication { get; set; }
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="DDocsContext"/> class.

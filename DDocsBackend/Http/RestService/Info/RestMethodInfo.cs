@@ -1,4 +1,7 @@
-﻿using System.Reflection;
+﻿using DDocsBackend.Services;
+using JWT.Exceptions;
+using Microsoft.Extensions.DependencyInjection;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace DDocsBackend;
@@ -26,13 +29,14 @@ internal class RestMethodInfo
     private readonly MatchEvaluator _routeParamEvaluator = new((a) => $"(?<{a.Groups[1].Value}>.+?)");
     private readonly Dictionary<(int index, string name), Type> _parameters = new();
     private readonly Logger _log;
-
+    private readonly bool _requirePermissions;
+    private readonly IServiceProvider _provider;
     /// <summary>
     ///     Creates a new instance of <see cref="RestMethodInfo"/>.
     /// </summary>
     /// <param name="route">The route attribute instance.</param>
     /// <param name="info">The reflection method info.</param>
-    public RestMethodInfo(Route route, MethodInfo info)
+    public RestMethodInfo(Route route, MethodInfo info, IServiceProvider provider)
     {
         _log = Logger.GetLogger<RestMethodInfo>();
 
@@ -49,6 +53,9 @@ internal class RestMethodInfo
             var param = parameters[i];
             _parameters.Add((i, param.Name!), param.ParameterType);
         }
+
+        _requirePermissions = info.GetCustomAttribute<RequireAuthentication>() != null;
+        _provider = provider;
     }
     
     /// <summary>
@@ -106,24 +113,50 @@ internal class RestMethodInfo
 
         return arr;
     }
-
-    /// <summary>
-    ///     Executes this method.
-    /// </summary>
-    /// <param name="instance">The instance of the module.</param>
-    /// <param name="parameters">The parameters for the method if any.</param>
-    /// <returns>The RestResult of this method.</returns>
-    public Task<RestResult> Execute(object instance, params object[] parameters)
-        => (Task<RestResult>?)_info.Invoke(instance, parameters)!;
-
     /// <summary>
     ///     Executes the route method as an an invokable asynchronous Task.
     /// </summary>
     /// <param name="instance">The route as an object instance.</param>
     /// <param name="parameters">The argument signature of the given route object.</param>
     /// <returns>The RestResult of this method.</returns>
-    public async Task<RestResult> ExecuteAsync(object instance, params object[] parameters)
-        => await ((Task<RestResult>?)this._info.Invoke(instance, parameters)!).ConfigureAwait(false);
+    public async Task<RestResult> ExecuteAsync(RestModuleBase? instance, params object[] parameters)
+        => await RunPreconditionsAsync(instance!) ?? await((Task<RestResult>?)this._info.Invoke(instance, parameters)!).ConfigureAwait(false);
+
+    private async Task<RestResult?> RunPreconditionsAsync(RestModuleBase instance)
+    {
+        if (_requirePermissions)
+        {
+            var authService = _provider.GetRequiredService<AuthenticationService>();
+
+            // check the header
+            var jwt = instance.Request.Headers["Authorization"];
+
+            if (jwt == null)
+                return RestResult.Unauthorized;
+
+            jwt = jwt.Replace("Bearer ", "");
+
+            try
+            {
+                var auth = await authService.GetAuthenticationAsync(jwt);
+
+                if (auth == null)
+                    return RestResult.Unauthorized;
+
+                instance.Authentication = auth;
+            }
+            catch (TokenExpiredException)
+            {
+                return RestResult.Unauthorized.WithData(new { reason = "The token you provided has expired" });
+            }
+            catch(SignatureVerificationException)
+            {
+                return RestResult.Unauthorized.WithData(new { reason = "The token you provided is invalid" });
+            }
+        }
+
+        return null;
+    }
 
     private Regex ConstructRouteParamRegex(string route)
     {

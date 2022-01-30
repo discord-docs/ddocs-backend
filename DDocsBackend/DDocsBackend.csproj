@@ -16,6 +16,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Discord.Net.Rest" Version="3.2.0" />
+    <PackageReference Include="JWT" Version="8.9.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -27,10 +29,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DDocsBackend.Database\DDocsBackend.Data.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="RestModels\" />
   </ItemGroup>
 
 </Project>

@@ -44,6 +44,11 @@ namespace DDocsBackend.Data.Models
         public List<Summary>? Summaries { get; set; }
 
         /// <summary>
+        ///     Gets or sets the thumbnail for this event.
+        /// </summary>
+        public string? Thumbnail { get; set; }
+
+        /// <summary>
         ///     Gets or sets whether or not this event is outdated.
         /// </summary>
         public bool Deprecated { get; set; } = false;

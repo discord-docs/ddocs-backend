@@ -1,4 +1,8 @@
-﻿using System.Net;
+﻿using DDocsBackend.Data.Models;
+using DDocsBackend.Helpers;
+using DDocsBackend.Services;
+using Microsoft.Extensions.DependencyInjection;
+using System.Net;
 
 namespace DDocsBackend;
 
@@ -14,6 +18,14 @@ public class RestModuleBase
         => Context.Request;
     public HttpListenerResponse Response
         => Context.Response;
+
+    public AuthenticationService AuthenticationService
+        => RestServer!.Provider.GetRequiredService<AuthenticationService>();
+
+    public DiscordOAuthHelper DiscordOAuthHelper
+        => RestServer!.Provider.GetRequiredService<DiscordOAuthHelper>();
+
+    public Authentication? Authentication { get; set; }
 
     internal RestModuleInfo? ModuleInfo { get; private set; }
 

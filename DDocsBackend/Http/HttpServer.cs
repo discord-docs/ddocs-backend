@@ -8,11 +8,13 @@ namespace DDocsBackend;
 
 public class HttpServer : IHostedService
 {
+    internal readonly IServiceProvider Provider;
+
     private readonly HttpListener _listener;
     private readonly HttpRestHandler _handler;
     private readonly Logger _log;
     private readonly int _port;
-    public HttpServer(IConfiguration config, DataAccessLayer dataAccessLayer)
+    public HttpServer(IConfiguration config, DataAccessLayer dataAccessLayer, IServiceProvider provider)
     {
         _log = Logger.GetLogger<HttpServer>();
 
@@ -40,6 +42,8 @@ public class HttpServer : IHostedService
         _handler = new(this);
 
         _port = port;
+
+        Provider = provider;
     }
 
 

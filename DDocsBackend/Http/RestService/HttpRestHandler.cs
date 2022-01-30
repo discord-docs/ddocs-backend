@@ -31,7 +31,7 @@ internal class HttpRestHandler
 
         foreach (var module in modules)
         {
-            this.Modules.Add(new RestModuleInfo(module));
+            this.Modules.Add(new RestModuleInfo(module, Server.Provider));
         }
     }
 

@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using DDocsBackend.Data;
 using DDocsBackend.Data.Context;
 using Microsoft.EntityFrameworkCore;
+using DDocsBackend.Services;
+using DDocsBackend.Helpers;
 
 Logger.AddStream(Console.OpenStandardOutput(), StreamType.StandardOut);
 Logger.AddStream(Console.OpenStandardError(), StreamType.StandardError);
@@ -29,6 +31,8 @@ try
         .AddDbContextFactory<DDocsContext>(x => 
             x.UseNpgsql(context.Configuration["CONNECTION_STRING"]))
         .AddSingleton<DataAccessLayer>()
+        .AddSingleton<DiscordOAuthHelper>()
+        .AddHostedService<AuthenticationService>()
         .AddHostedService<HttpServer>();
     })
     .UseConsoleLifetime();

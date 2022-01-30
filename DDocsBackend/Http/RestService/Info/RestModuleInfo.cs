@@ -11,7 +11,7 @@ internal class RestModuleInfo
 
     private readonly Logger _log;
 
-    public RestModuleInfo(Type type)
+    public RestModuleInfo(Type type, IServiceProvider provider)
     {
         _log = Logger.GetLogger<RestModuleInfo>();
 
@@ -24,7 +24,7 @@ internal class RestModuleInfo
 
         foreach (var method in methods)
         {
-            Routes.Add(new RestMethodInfo(method.Item1, method.x));
+            Routes.Add(new RestMethodInfo(method.Item1, method.x, provider));
         }
     }
 
