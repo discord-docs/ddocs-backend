@@ -2,7 +2,7 @@
 The backend service for [DDocs](https://ddocs.io)
 
 
-## Enviorment Variables
+## Environment Variables
 |        Name       | Description                                          |
 |:-----------------:|------------------------------------------------------|
 | CONNECTION_STRING | The postgres connection string                       |
