@@ -13,22 +13,19 @@ namespace DDocsBackend.Data.Context
     /// </summary>
     public class DDocsContext : DbContext
     {
-        public DbSet<Event>? Events { get; set; }
-        public DbSet<Summary>? Summaries { get; set; }
-        public DbSet<Author>? Authors { get; set; }
+        public DbSet<Event> Events { get; set; }
+        public DbSet<Summary> Summaries { get; set; }
+        public DbSet<Author> Authors { get; set; }
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="DDocsContext"/> class.
         /// </summary>
         /// <param name="options">The <see cref="DbContextOptions"/> to be injected.</param>
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public DDocsContext(DbContextOptions options)
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
             : base(options)
         {
-        }
-
-        protected override void OnModelCreating(ModelBuilder builder)
-        {
-            // todo
         }
     }
 }
