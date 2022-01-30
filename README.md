@@ -5,6 +5,8 @@ The backend service for [DDocs](https://ddocs.io)
 ## Working with EF Core
 This project uses EF Core to communicate between the application and postgres. To use this system propery you will need a few prerequisites:
 
+In order to run any ef commands on the project you must have the env variable `CONNECTION_STRING` set to the postgres connection string.
+
 #### Add EntityFramework dotnet tool
 ```
 $> dotnet tool install --global dotnet-ef
