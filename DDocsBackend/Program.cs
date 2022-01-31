@@ -30,9 +30,10 @@ try
     {
         // configure our services
         services
-        .AddSingleton(x => new JsonSerializer { ContractResolver = new DDocsContractResolver() })
-        .AddDbContextFactory<DDocsContext>(x => 
+        .AddDbContextFactory<DDocsContext>(x =>
             x.UseNpgsql(context.Configuration["CONNECTION_STRING"]))
+        .AddSingleton(x => new JsonSerializer { ContractResolver = new DDocsContractResolver() })
+        .AddSingleton<DiscordBridgeService>()
         .AddSingleton<DataAccessLayer>()
         .AddSingleton<DiscordOAuthHelper>()
         .AddSingleton<AuthenticationService>()

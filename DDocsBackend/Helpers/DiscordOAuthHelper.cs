@@ -61,7 +61,7 @@ namespace DDocsBackend.Helpers
             }
         }
 
-        public async Task<AccessTokenResponse?> RefreshTokenAsync(string refreshToken)
+        public async Task<AccessTokenResponse?> RefreshTokenAsync(string? refreshToken)
         {
             using (var client = new HttpClient())
             {

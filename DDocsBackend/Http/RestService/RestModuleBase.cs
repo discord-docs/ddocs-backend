@@ -1,4 +1,5 @@
-﻿using DDocsBackend.Data.Models;
+﻿using DDocsBackend.Data;
+using DDocsBackend.Data.Models;
 using DDocsBackend.Helpers;
 using DDocsBackend.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,6 +31,12 @@ public class RestModuleBase
 
     public JsonSerializer Serializer
         => RestServer!.Provider.GetRequiredService<JsonSerializer>();
+
+    public DataAccessLayer DataAccessLayer
+        => RestServer!.Provider.GetRequiredService<DataAccessLayer>();
+
+    public DiscordBridgeService DiscordService
+        => RestServer!.Provider.GetRequiredService<DiscordBridgeService>();
 
     internal RestModuleInfo? ModuleInfo { get; private set; }
 

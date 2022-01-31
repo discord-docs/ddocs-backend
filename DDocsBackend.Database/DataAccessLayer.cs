@@ -44,6 +44,31 @@ namespace DDocsBackend.Data
             return await context.DiscordAuthentication.FindAsync(userId).ConfigureAwait(false);
         }
 
+        public async Task<DiscordOAuthAuthentication?> ApplyDiscordOAuthRefresh(ulong userId, string? newAccessToken, string? newRefreshToken, DateTimeOffset expiresAt)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            var user = await context.DiscordAuthentication.FindAsync(userId).ConfigureAwait(false);
+
+            if (user == null)
+                return null;
+
+            user.AccessToken = newAccessToken;
+            user.RefreshToken = newRefreshToken;
+            user.ExpiresAt = expiresAt;
+
+            await context.SaveChangesAsync().ConfigureAwait(false);
+
+            return user;
+        }
+
+        public async Task<bool> IsAuthorAsync(ulong userId)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            return await context.VerifiedAuthors.AnyAsync(x => x.UserId == userId).ConfigureAwait(false);
+        }
+
         public async Task<Authentication> CreateAuthenticationAsync(string? discordAccessToken, string? discordRefreshToken, DateTimeOffset discordExpiresAt, string jwtRefreshToken, DateTimeOffset jwtRefrshValidUntil, ulong userId)
         {
             using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
