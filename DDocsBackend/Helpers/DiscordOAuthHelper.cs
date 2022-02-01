@@ -57,6 +57,8 @@ namespace DDocsBackend.Helpers
                     return JsonConvert.DeserializeObject<AccessTokenResponse>(content);
                 }
 
+                _log.Warn($"Failed to get ouath token, got code {code} with redir {_redirectUri}");
+
                 return null;
             }
         }
