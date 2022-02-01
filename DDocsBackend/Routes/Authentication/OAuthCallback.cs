@@ -18,14 +18,7 @@ namespace DDocsBackend.Routes.Authentication
 
             var result = await AuthenticationService.CreateAuthenticationAsync(tokenResult);
 
-            Response.SetCookie(new System.Net.Cookie("r_", result.Authentication.JWTRefreshToken)
-            {
-                Expires = DateTime.UtcNow.AddDays(7),
-#if DEBUG == false
-                Domain = "ddocs.io",
-                Secure = true
-#endif
-            });
+            SetRefreshCookie(result.Authentication.JWTRefreshToken!);
 
             return RestResult.OK.WithData(new
             {

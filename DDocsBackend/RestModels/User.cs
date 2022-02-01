@@ -9,7 +9,7 @@ namespace DDocsBackend.RestModels
 {
     public class User
     {
-        [JsonProperty("id")]
+        [JsonProperty("uid")]
         public ulong Id { get; set; }
 
         [JsonProperty("username")]

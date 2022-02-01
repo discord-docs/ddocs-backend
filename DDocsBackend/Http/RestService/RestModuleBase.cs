@@ -40,6 +40,16 @@ public class RestModuleBase
 
     internal RestModuleInfo? ModuleInfo { get; private set; }
 
+    internal void SetRefreshCookie(string token)
+    {
+        Response.AppendHeader("Set-Cookie", $"r_={token}; Max-Age={60 * 60 * 24 * 7}; HttpOnly");
+    }
+
+    internal void ClearRefreshCookie()
+    {
+        Response.AppendHeader("Set-Cookie", $"r_=none; Max-Age=0; HttpOnly");
+    }
+
     internal RestModuleBase InitializeModule(HttpListenerContext context, RestModuleInfo info, HttpServer server)
     {
         this.Context = context;

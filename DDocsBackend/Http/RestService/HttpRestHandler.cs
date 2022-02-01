@@ -93,9 +93,19 @@ internal class HttpRestHandler
 
     public async Task<int> ProcessRestRequestAsync(HttpListenerContext context)
     {
-        context.Response.Headers.Add("Access-Control-Allow-Headers", "*");
-        context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+        context.Response.Headers.Add("Access-Control-Allow-Origin", "https://ddocs.io");
         context.Response.Headers.Add("Access-Control-Allow-Methods", "*");
+        context.Response.Headers.Add("Access-Control-Allow-Credentials", "true");
+
+        if(context.Request.HttpMethod == "OPTIONS")
+        {
+            context.Response.Headers.Add("Access-Control-Allow-Headers", context.Request.Headers["Access-Control-Request-Headers"] ?? "*");
+            context.Response.StatusCode = 200;
+            context.Response.Close();
+            return 200;
+        }
+
+        context.Response.Headers.Add("Access-Control-Allow-Headers", "*");
 
         if (!TryGetModule(context.Request, out var module, out var info))
         {

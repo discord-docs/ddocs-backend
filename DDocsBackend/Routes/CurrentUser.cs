@@ -16,7 +16,7 @@ namespace DDocsBackend.Routes
             var oauth = await DataAccessLayer.GetDiscordOAuthAsync(Authentication!.UserId).ConfigureAwait(false);
 
             if (oauth == null)
-                return RestResult.Unauthorized;
+                return RestResult.Forbidden;
 
             var result = await DiscordService.GetUserAsync(oauth).ConfigureAwait(false);
 

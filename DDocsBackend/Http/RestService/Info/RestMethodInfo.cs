@@ -129,7 +129,7 @@ internal class RestMethodInfo
         // check the header
         var jwt = instance.Request.Headers["Authorization"];
 
-        if (jwt == null)
+        if (string.IsNullOrEmpty(jwt))
             return;
 
         jwt = jwt.Replace("Bearer ", "");
@@ -155,7 +155,7 @@ internal class RestMethodInfo
 
         if (_requirePermissions && instance.Authentication == null)
         {
-            return RestResult.Unauthorized;
+            return RestResult.Unauthorized.WithData(new {reason = "Invalid authorization"});
         }
 
         return null;

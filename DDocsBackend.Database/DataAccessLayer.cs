@@ -69,6 +69,20 @@ namespace DDocsBackend.Data
             return await context.VerifiedAuthors.AnyAsync(x => x.UserId == userId).ConfigureAwait(false);
         }
 
+        public async Task DeleteAuthenticationAsync(Authentication auth)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            context.Authentication.Remove(auth);
+
+            var discordAuth = await context.DiscordAuthentication.FindAsync(auth.UserId).ConfigureAwait(false);
+
+            if (discordAuth != null) 
+                context.DiscordAuthentication.Remove(discordAuth);
+
+            await context.SaveChangesAsync().ConfigureAwait(false);
+        }
+
         public async Task<Authentication> CreateAuthenticationAsync(string? discordAccessToken, string? discordRefreshToken, DateTimeOffset discordExpiresAt, string jwtRefreshToken, DateTimeOffset jwtRefrshValidUntil, ulong userId)
         {
             using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);

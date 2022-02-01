@@ -17,7 +17,6 @@ namespace DDocsBackend.Routes.Authentication
             if (Authentication != null)
                 return RestResult.BadRequest;
 
-
             var refreshToken = Request.Cookies["r_"];
 
             if (refreshToken == null)
@@ -31,14 +30,7 @@ namespace DDocsBackend.Routes.Authentication
                 return RestResult.BadRequest;
             }
 
-            Response.SetCookie(new System.Net.Cookie("r_", result.Value.newRefresh)
-            {
-                Expires = DateTime.UtcNow.AddDays(7),
-#if DEBUG == false
-                Domain = "ddocs.io",
-                Secure = true
-#endif
-            });
+            SetRefreshCookie(result.Value.newRefresh);
 
             return RestResult.OK.WithData(new
             {
