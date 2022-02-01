@@ -164,6 +164,8 @@ internal class HttpRestHandler
                 return 200;
             }
 
+            context.Response.StatusCode = result.Code;
+
             if (result.Data != null)
             {
                 context.Response.ContentType = "application/json";
@@ -176,7 +178,6 @@ internal class HttpRestHandler
                 }    
             }
 
-            context.Response.StatusCode = result.Code;
             context.Response.Close();
             return result.Code;
         }

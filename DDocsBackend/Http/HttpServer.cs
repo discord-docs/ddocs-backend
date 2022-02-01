@@ -54,9 +54,7 @@ public class HttpServer : IHostedService
             var context = await _listener.GetContextAsync().ConfigureAwait(false);
             _ = Task.Run(async () =>
             {
-                GC.KeepAlive(context.Response);
                 await HandleContext(context).ConfigureAwait(false);
-                GC.ReRegisterForFinalize(context.Response);
             });
         }
     }
@@ -66,12 +64,9 @@ public class HttpServer : IHostedService
         var sw = Stopwatch.StartNew();
         try
         {
-            using(var response = context.Response)
-            {
-                var code = await _handler.ProcessRestRequestAsync(context);
-                sw.Stop();
-                _log.Debug($"{sw.ElapsedMilliseconds}ms: {GetColorFromMethod(context.Request.HttpMethod)} => {context.Request.RawUrl} {code}", Severity.Rest);
-            }
+            var code = await _handler.ProcessRestRequestAsync(context);
+            sw.Stop();
+            _log.Debug($"{sw.ElapsedMilliseconds}ms: {GetColorFromMethod(context.Request.HttpMethod)} => {context.Request.RawUrl} {code}", Severity.Rest);
         }
         catch (Exception x)
         {
