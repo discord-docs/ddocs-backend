@@ -43,7 +43,7 @@ public class RestModuleBase
     internal void SetRefreshCookie(string token)
     {
 #if DEBUG == false
-        Response.AppendHeader("Set-Cookie", $"r_={token}; Path=/; Max-Age={60 * 60 * 24 * 7}; HttpOnly; Domain=api.ddocs.io; Secure;");
+        Response.AppendHeader("Set-Cookie", $"r_={token}; Path=/; Max-Age={60 * 60 * 24 * 7}; HttpOnly; Domain=ddocs.io; Secure;");
 #else
         Response.AppendHeader("Set-Cookie", $"r_={token}; Path=/; Max-Age={60 * 60 * 24 * 7}; HttpOnly;");
 #endif
@@ -52,7 +52,7 @@ public class RestModuleBase
     internal void ClearRefreshCookie()
     {
 #if DEBUG == false
-        Response.AppendHeader("Set-Cookie", $"r_=none; Path=/; Max-Age=0; HttpOnly; Domain=api.ddocs.io; Secure;");
+        Response.AppendHeader("Set-Cookie", $"r_=none; Path=/; Max-Age=0; HttpOnly; Domain=ddocs.io; Secure;");
 #else
         Response.AppendHeader("Set-Cookie", $"r_=none; Path=/; Max-Age=0; HttpOnly;");
 #endif
