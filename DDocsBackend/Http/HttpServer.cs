@@ -52,7 +52,12 @@ public class HttpServer : IHostedService
         while (_listener.IsListening)
         {
             var context = await _listener.GetContextAsync().ConfigureAwait(false);
-            _ = Task.Run(async () => await HandleContext(context).ConfigureAwait(false));
+            _ = Task.Run(async () =>
+            {
+                GC.KeepAlive(context.Response);
+                await HandleContext(context).ConfigureAwait(false);
+                GC.ReRegisterForFinalize(context.Response);
+            });
         }
     }
 
