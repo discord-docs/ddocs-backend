@@ -4,6 +4,7 @@ using DDocsBackend.Helpers;
 using Discord;
 using Discord.Net;
 using Discord.Rest;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,13 +20,37 @@ namespace DDocsBackend.Services
         private DiscordOAuthHelper _oauthHelper;
         private DataAccessLayer _dataAccessLayer;
         private ObjectCache _cache;
+        private readonly string _token;
+        private readonly DiscordRestClient _botClient;
 
-        public DiscordBridgeService(AuthenticationService authService, DiscordOAuthHelper oauthHelper, DataAccessLayer dataAccessLayer)
+        public DiscordBridgeService(AuthenticationService authService, DiscordOAuthHelper oauthHelper, DataAccessLayer dataAccessLayer, IConfiguration config)
         {
+            _token = config["BOT_TOKEN"];
             _authService = authService;
             _oauthHelper = oauthHelper;
             _dataAccessLayer = dataAccessLayer;
             _cache = MemoryCache.Default;
+            _botClient = new();
+        }
+
+        public async ValueTask<IUser?> GetUserAsync(ulong id)
+        {
+            var cached = _cache.Get($"{id}");
+
+            if (cached != null)
+                return cached as IUser;
+
+            if (_botClient.LoginState != LoginState.LoggedIn)
+                await _botClient.LoginAsync(TokenType.Bot, _token);
+
+            var user = await _botClient.GetUserAsync(id);
+
+            if (user == null)
+                return null;
+
+            _cache.Add($"{id}", user, DateTime.UtcNow.AddDays(1));
+
+            return user;
         }
 
         public async ValueTask<IUser?> GetUserAsync(DiscordOAuthAuthentication auth)
@@ -45,6 +70,11 @@ namespace DDocsBackend.Services
                 _cache.Set($"{auth.UserId}", user, DateTime.UtcNow.AddDays(1));
                 return user;
             }
+        }
+
+        public string GetDefaultAvatar(ulong userId)
+        {
+            return $"https://cdn.discordapp.com/embed/avatars/{userId % 5}.png";
         }
 
         private async Task<DiscordRestClient?> GetClientAsync(DiscordOAuthAuthentication auth)

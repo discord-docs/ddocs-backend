@@ -16,11 +16,59 @@ namespace DDocsBackend.Data
             _contextFactory = contextFactory;
         }
 
-        public async Task<Author?> GetAuthorAsync(ulong userId)
+        public async Task<Event[]> GetEventsAsync(int year)
         {
             using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
-            return await context.Authors.FindAsync(userId).ConfigureAwait(false);
+            return await context.Events.Where(x => x.HeldAt.Year == year).ToArrayAsync().ConfigureAwait(false);
+        }
+
+        public async Task<Event?> GetEventAsync(Guid id)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            return await context.Events.Include(x => x.Authors).Include(x => x.Summaries).FirstOrDefaultAsync(x => x.EventId == id).ConfigureAwait(false);
+        }
+
+        public async Task CreateEventAsync()
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            var id = Guid.NewGuid();
+
+            await context.Events.AddAsync(new Event
+            {
+                Title = "Test",
+                Description = "Test desc",
+                Deprecated = false,
+                Authors = new List<Author>()
+                {
+                    new Author
+                    {
+                        UserId = 259053800755691520,
+                        Revised = false
+                    }
+                },
+                EventId = id,
+                HeldAt = DateTimeOffset.UtcNow,
+                Summaries = new List<Summary>
+                {
+                    new Summary
+                    {
+                        Content = "Test content",
+                        EventId = id,
+                        IsNew = true,
+                        Status = null,
+                        SummaryId = Guid.NewGuid(),
+                        Title = "Test title",
+                        Type = SummaryType.QNAAnswer,
+                        Url = null
+                    }
+                },
+                Thumbnail = null
+            });
+
+            context.SaveChanges();
         }
 
         public async Task<Authentication?> GetAuthenticationAsync(ulong userId)

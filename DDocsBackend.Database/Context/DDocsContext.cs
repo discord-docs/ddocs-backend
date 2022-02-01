@@ -30,5 +30,9 @@ namespace DDocsBackend.Data.Context
             : base(options)
         {
         }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+        }
     }
 }

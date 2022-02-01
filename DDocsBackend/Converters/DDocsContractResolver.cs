@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using DDocsBackend.Data.Models;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
@@ -46,6 +47,12 @@ namespace DDocsBackend.Converters
 
             if (type == typeof(ulong))
                 return SnowflakeConverter.Instance;
+
+            if (type == typeof(SummaryType))
+                return SummaryTypeConverter.Instance;
+
+            if (type == typeof(FeatureType))
+                return FeatureTypeConverter.Instance;
 
             return null;
         }
