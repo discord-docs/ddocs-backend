@@ -66,9 +66,12 @@ public class HttpServer : IHostedService
         var sw = Stopwatch.StartNew();
         try
         {
-            var code = await _handler.ProcessRestRequestAsync(context);
-            sw.Stop();
-            _log.Debug($"{sw.ElapsedMilliseconds}ms: {GetColorFromMethod(context.Request.HttpMethod)} => {context.Request.RawUrl} {code}", Severity.Rest);
+            using(var response = context.Response)
+            {
+                var code = await _handler.ProcessRestRequestAsync(context);
+                sw.Stop();
+                _log.Debug($"{sw.ElapsedMilliseconds}ms: {GetColorFromMethod(context.Request.HttpMethod)} => {context.Request.RawUrl} {code}", Severity.Rest);
+            }
         }
         catch (Exception x)
         {
