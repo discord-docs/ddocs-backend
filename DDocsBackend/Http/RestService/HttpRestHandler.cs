@@ -93,7 +93,7 @@ internal class HttpRestHandler
 
     public async Task<int> ProcessRestRequestAsync(HttpListenerContext context)
     {
-        context.Response.Headers.Add("Access-Control-Allow-Origin", "https://ddocs.io");
+        context.Response.Headers.Add("Access-Control-Allow-Origin", $"{context.Request.Headers["origin"]}");
         context.Response.Headers.Add("Access-Control-Allow-Methods", "*");
         context.Response.Headers.Add("Access-Control-Allow-Credentials", "true");
 
