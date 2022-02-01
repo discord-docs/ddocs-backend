@@ -42,12 +42,20 @@ public class RestModuleBase
 
     internal void SetRefreshCookie(string token)
     {
-        Response.AppendHeader("Set-Cookie", $"r_={token}; Path=/; Max-Age={60 * 60 * 24 * 7}; HttpOnly; SameSite=None; Secure");
+#if DEBUG == false
+        Response.AppendHeader("Set-Cookie", $"r_={token}; Path=/; Max-Age={60 * 60 * 24 * 7}; HttpOnly; Domain=api.ddocs.io; Secure;");
+#else
+        Response.AppendHeader("Set-Cookie", $"r_={token}; Path=/; Max-Age={60 * 60 * 24 * 7}; HttpOnly;");
+#endif
     }
 
     internal void ClearRefreshCookie()
     {
-        Response.AppendHeader("Set-Cookie", $"r_=none; Path=/; Max-Age=0; HttpOnly; SameSite=None; Secure");
+#if DEBUG == false
+        Response.AppendHeader("Set-Cookie", $"r_=none; Path=/; Max-Age=0; HttpOnly; Domain=api.ddocs.io; Secure;");
+#else
+        Response.AppendHeader("Set-Cookie", $"r_=none; Path=/; Max-Age=0; HttpOnly;");
+#endif
     }
 
     internal RestModuleBase InitializeModule(HttpListenerContext context, RestModuleInfo info, HttpServer server)
