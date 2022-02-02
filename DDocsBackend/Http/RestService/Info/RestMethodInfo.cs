@@ -26,7 +26,7 @@ internal class RestMethodInfo
     private readonly Route _route;
     private readonly MethodInfo _info;
     private readonly Regex? _routeParamRegex;
-    private readonly MatchEvaluator _routeParamEvaluator = new((a) => $"(?<{a.Groups[1].Value}>.+?)");
+    private readonly MatchEvaluator _routeParamEvaluator = new((a) => $@"(?<{a.Groups[1].Value}>[^\/]+?)");
     private readonly Dictionary<(int index, string name), Type> _parameters = new();
     private readonly Logger _log;
     private readonly bool _requirePermissions;

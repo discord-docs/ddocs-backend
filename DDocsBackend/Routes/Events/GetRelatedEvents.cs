@@ -9,7 +9,7 @@ namespace DDocsBackend.Routes.Events
 {
     public class GetRelatedEvents : RestModuleBase
     {
-        [Route("events/{eventId}/related", "GET")]
+        [Route("/events/{eventId}/related", "GET")]
         public async Task<RestResult> ExecuteAsync(string eventId)
         {
             if(!Guid.TryParse(eventId, out var id))
