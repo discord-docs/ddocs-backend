@@ -43,9 +43,23 @@ namespace DDocsBackend.Data
         {
             using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
+            await context.Events.AddAsync(GenEvent());
+            await context.Events.AddAsync(GenEvent());
+            await context.Events.AddAsync(GenEvent());
+            await context.Events.AddAsync(GenEvent());
+            await context.Events.AddAsync(GenEvent());
+            await context.Events.AddAsync(GenEvent());
+            await context.Events.AddAsync(GenEvent());
+            await context.Events.AddAsync(GenEvent());
+
+            context.SaveChanges();
+        }
+
+        private Event GenEvent()
+        {
             var id = Guid.NewGuid();
 
-            await context.Events.AddAsync(new Event
+            return new Event
             {
                 Title = "Test",
                 Description = "Test desc",
@@ -56,6 +70,21 @@ namespace DDocsBackend.Data
                     {
                         UserId = 259053800755691520,
                         Revised = false
+                    },
+                    new Author
+                    {
+                        UserId = 242351388137488384,
+                        Revised = true
+                    },
+                    new Author
+                    {
+                        UserId = 619241308912877609,
+                        Revised = true
+                    },
+                    new Author
+                    {
+                        UserId = 840806601957965864,
+                        Revised = true
                     }
                 },
                 EventId = id,
@@ -71,13 +100,36 @@ namespace DDocsBackend.Data
                         SummaryId = Guid.NewGuid(),
                         Title = "Test title",
                         Type = SummaryType.QNAAnswer,
-                        Url = null
+                        Url = null,
+                        LastRevised = DateTimeOffset.UtcNow
+                    },
+                    new Summary
+                    {
+                        Content = "Test content",
+                        EventId = id,
+                        IsNew = false,
+                        Status = null,
+                        SummaryId = Guid.NewGuid(),
+                        Title = "Test title",
+                        Type = SummaryType.QNAAnswer,
+                        Url = null,
+                        LastRevised = DateTimeOffset.UtcNow
+                    },
+                    new Summary
+                    {
+                        Content = "Test content\n# h1\n## h2\n ### h3\n#### h4",
+                        EventId = id,
+                        IsNew = true,
+                        Status = FeatureType.ClosedBeta,
+                        SummaryId = Guid.NewGuid(),
+                        Title = "Test title",
+                        Type = SummaryType.Feature,
+                        Url = null,
+                        LastRevised = DateTimeOffset.UtcNow
                     }
                 },
-                Thumbnail = null
-            });
-
-            context.SaveChanges();
+                Thumbnail = null,
+            };
         }
 
         public async Task<Authentication?> GetAuthenticationAsync(ulong userId)
