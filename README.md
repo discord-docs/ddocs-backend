@@ -1,4 +1,6 @@
 # ddocs-backend
+[![Support Server Invite](https://img.shields.io/discord/936725123724111953.svg?color=7289da&label=DDocs&logo=discord&style=flat-square)](https://discord.gg/HzJfeuUM5h)
+
 The backend service for [DDocs](https://ddocs.io)
 
 
