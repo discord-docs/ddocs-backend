@@ -30,6 +30,7 @@ try
     {
         // configure our services
         services
+        .AddEntityFrameworkNpgsql()
         .AddDbContextFactory<DDocsContext>(x =>
             x.UseNpgsql(context.Configuration["CONNECTION_STRING"]))
         .AddSingleton(x => new JsonSerializer { ContractResolver = new DDocsContractResolver() })

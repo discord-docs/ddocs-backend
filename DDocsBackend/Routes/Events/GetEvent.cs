@@ -28,43 +28,17 @@ namespace DDocsBackend.Routes.Events
 
             return RestResult.OK.WithData(new Event
             {
-                Author = await GetAuthorAsync(author!),
+                Author = await this.GetAuthorAsync(author!),
                 // bit of a sus async bypass here
-                Contributors = await Task.WhenAll(evnt.Authors?.Where(x => x.Revised).Select(x => GetAuthorAsync(x))!),
+                Contributors = await Task.WhenAll(evnt.Authors?.Where(x => x.Revised).Select(x => this.GetAuthorAsync(x))!),
                 Description = evnt.Description,
                 EventId = evnt.EventId.ToString("N"),
                 HeldAt = evnt.HeldAt,
-                Summaries = evnt.Summaries!.Select(x => ConvertSummary(x)),
+                Summaries = evnt.Summaries!.Select(x => this.ConvertSummary(x)),
                 Title = evnt.Title,
-                Thumbnail = evnt.Thumbnail
+                Thumbnail = evnt.Thumbnail,
+                LastRevised = evnt.Summaries!.Max(x => x.LastRevised)
             });
-        }
-
-        private async Task<Author?> GetAuthorAsync(Data.Models.Author author)
-        {
-            var authorUser = author != null ? await DiscordService.GetUserAsync(author.UserId).ConfigureAwait(false) : null;
-
-            return new Author()
-            {
-                Avatar = authorUser?.GetAvatarUrl() ?? DiscordService.GetDefaultAvatar(author!.UserId),
-                Discriminator = authorUser?.Discriminator ?? "0000",
-                UserId = author!.UserId,
-                Username = authorUser?.Username ?? "unknown"
-            };
-        }
-
-        private EventSummary? ConvertSummary(Data.Models.Summary summary)
-        {
-            return new EventSummary
-            {
-                Content = summary.Content,
-                FeatureType = summary.Status,
-                Id = summary.SummaryId.ToString("N"),
-                IsNew = summary.IsNew,
-                Thumbnail = summary.Url,
-                Title = summary.Title,
-                Type = summary.Type
-            };
         }
     }
 }

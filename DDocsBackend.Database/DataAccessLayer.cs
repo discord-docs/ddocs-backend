@@ -1,6 +1,7 @@
 ﻿using DDocsBackend.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using DDocsBackend.Data.Models;
+using Fastenshtein;
 
 namespace DDocsBackend.Data
 {
@@ -28,6 +29,14 @@ namespace DDocsBackend.Data
             using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
             return await context.Events.Include(x => x.Authors).Include(x => x.Summaries).FirstOrDefaultAsync(x => x.EventId == id).ConfigureAwait(false);
+        }
+
+        public async Task<Event[]> SearchEventsAsync(string query)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+
+            return await context.Events.Where(p => EF.Functions.ILike(p.Title!, $"%{query}%")).ToArrayAsync().ConfigureAwait(false);
         }
 
         public async Task CreateEventAsync()

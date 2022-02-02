@@ -54,5 +54,10 @@ namespace DDocsBackend.Data.Models
         ///     This property is only set when <see cref="Type"/> is <see cref="SummaryType.Feature"/>
         /// </remarks>
         public FeatureType? Status { get; set; }
+
+        /// <summary>
+        ///     Gets the most recent revision date for this summary.
+        /// </summary>
+        public DateTimeOffset LastRevised { get; set; }
     }
 }

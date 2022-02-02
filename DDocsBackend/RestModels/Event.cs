@@ -17,5 +17,9 @@ namespace DDocsBackend.RestModels
 
         [JsonProperty("summaries")]
         public IEnumerable<EventSummary?> Summaries { get; set; } = new List<EventSummary>();
+
+        [JsonProperty("lastRevised")]
+        public DateTimeOffset LastRevised { get; set; }
+
     }
 }
