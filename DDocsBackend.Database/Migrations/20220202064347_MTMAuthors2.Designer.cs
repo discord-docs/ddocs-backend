@@ -3,6 +3,7 @@ using System;
 using DDocsBackend.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,31 +12,18 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DDocsBackend.Data.Migrations
 {
     [DbContext(typeof(DDocsContext))]
-    partial class DDocsContextModelSnapshot : ModelSnapshot
+    [Migration("20220202064347_MTMAuthors2")]
+    partial class MTMAuthors2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "6.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "fuzzystrmatch");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("AuthorEvent", b =>
-                {
-                    b.Property<Guid>("AuthorsId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("EventsEventId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("AuthorsId", "EventsEventId");
-
-                    b.HasIndex("EventsEventId");
-
-                    b.ToTable("AuthorEvent");
-                });
 
             modelBuilder.Entity("DDocsBackend.Data.Models.Authentication", b =>
                 {
@@ -56,17 +44,19 @@ namespace DDocsBackend.Data.Migrations
 
             modelBuilder.Entity("DDocsBackend.Data.Models.Author", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<decimal>("UserId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<Guid?>("EventId")
                         .HasColumnType("uuid");
 
                     b.Property<bool>("Revised")
                         .HasColumnType("boolean");
 
-                    b.Property<decimal>("UserId")
-                        .HasColumnType("numeric(20,0)");
+                    b.HasKey("UserId");
 
-                    b.HasKey("Id");
+                    b.HasIndex("EventId");
 
                     b.ToTable("Authors");
                 });
@@ -165,19 +155,13 @@ namespace DDocsBackend.Data.Migrations
                     b.ToTable("VerifiedAuthors");
                 });
 
-            modelBuilder.Entity("AuthorEvent", b =>
+            modelBuilder.Entity("DDocsBackend.Data.Models.Author", b =>
                 {
-                    b.HasOne("DDocsBackend.Data.Models.Author", null)
-                        .WithMany()
-                        .HasForeignKey("AuthorsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("DDocsBackend.Data.Models.Event", "Event")
+                        .WithMany("Authors")
+                        .HasForeignKey("EventId");
 
-                    b.HasOne("DDocsBackend.Data.Models.Event", null)
-                        .WithMany()
-                        .HasForeignKey("EventsEventId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("Event");
                 });
 
             modelBuilder.Entity("DDocsBackend.Data.Models.Summary", b =>
@@ -191,6 +175,8 @@ namespace DDocsBackend.Data.Migrations
 
             modelBuilder.Entity("DDocsBackend.Data.Models.Event", b =>
                 {
+                    b.Navigation("Authors");
+
                     b.Navigation("Summaries");
                 });
 #pragma warning restore 612, 618

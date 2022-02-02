@@ -12,6 +12,9 @@ namespace DDocsBackend.Routes.Events
         public async Task<RestResult> CreateEventAsync()
         {
             await DataAccessLayer.CreateEventAsync();
+            await DataAccessLayer.CreateEventAsync();
+            await DataAccessLayer.CreateEventAsync();
+            await DataAccessLayer.CreateEventAsync();
 
             return RestResult.OK;
         }

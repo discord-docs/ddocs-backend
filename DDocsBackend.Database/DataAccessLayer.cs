@@ -44,13 +44,6 @@ namespace DDocsBackend.Data
             using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
             await context.Events.AddAsync(GenEvent());
-            await context.Events.AddAsync(GenEvent());
-            await context.Events.AddAsync(GenEvent());
-            await context.Events.AddAsync(GenEvent());
-            await context.Events.AddAsync(GenEvent());
-            await context.Events.AddAsync(GenEvent());
-            await context.Events.AddAsync(GenEvent());
-            await context.Events.AddAsync(GenEvent());
 
             context.SaveChanges();
         }
@@ -59,11 +52,13 @@ namespace DDocsBackend.Data
         {
             var id = Guid.NewGuid();
 
-            return new Event
+            var ev =  new Event
             {
                 Title = "Test",
                 Description = "Test desc",
                 Deprecated = false,
+                EventId = id,
+                HeldAt = DateTimeOffset.UtcNow,
                 Authors = new List<Author>()
                 {
                     new Author
@@ -87,8 +82,6 @@ namespace DDocsBackend.Data
                         Revised = true
                     }
                 },
-                EventId = id,
-                HeldAt = DateTimeOffset.UtcNow,
                 Summaries = new List<Summary>
                 {
                     new Summary
@@ -130,6 +123,8 @@ namespace DDocsBackend.Data
                 },
                 Thumbnail = null,
             };
+
+            return ev;
         }
 
         public async Task<Authentication?> GetAuthenticationAsync(ulong userId)

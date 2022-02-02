@@ -10,8 +10,12 @@ namespace DDocsBackend.Data.Models
     /// <summary>
     ///     An object representing a DDevs event.
     /// </summary>
-    public class Event
+    public partial class Event
     {
+        public Event()
+        {
+            Authors = new HashSet<Author>();
+        }
         /// <summary>
         ///     Gets or sets the unique id for this event.
         /// </summary>
@@ -36,12 +40,12 @@ namespace DDocsBackend.Data.Models
         /// <summary>
         ///     Gets or sets the authors that contributed to this events summary.
         /// </summary>
-        public virtual List<Author>? Authors { get; set; }
+        public ICollection<Author>? Authors { get; set; }
 
         /// <summary>
         ///     Gets or sets the summaries for this event.
         /// </summary>
-        public virtual List<Summary>? Summaries { get; set; }
+        public virtual ICollection<Summary>? Summaries { get; set; }
 
         /// <summary>
         ///     Gets or sets the thumbnail for this event.

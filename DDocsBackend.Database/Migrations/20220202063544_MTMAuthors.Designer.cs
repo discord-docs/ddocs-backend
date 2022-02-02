@@ -3,6 +3,7 @@ using System;
 using DDocsBackend.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,26 +12,28 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DDocsBackend.Data.Migrations
 {
     [DbContext(typeof(DDocsContext))]
-    partial class DDocsContextModelSnapshot : ModelSnapshot
+    [Migration("20220202063544_MTMAuthors")]
+    partial class MTMAuthors
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "6.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "fuzzystrmatch");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("AuthorEvent", b =>
                 {
-                    b.Property<Guid>("AuthorsId")
-                        .HasColumnType("uuid");
+                    b.Property<decimal>("AuthorsUserId")
+                        .HasColumnType("numeric(20,0)");
 
                     b.Property<Guid>("EventsEventId")
                         .HasColumnType("uuid");
 
-                    b.HasKey("AuthorsId", "EventsEventId");
+                    b.HasKey("AuthorsUserId", "EventsEventId");
 
                     b.HasIndex("EventsEventId");
 
@@ -56,17 +59,14 @@ namespace DDocsBackend.Data.Migrations
 
             modelBuilder.Entity("DDocsBackend.Data.Models.Author", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<decimal>("UserId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("numeric(20,0)");
 
                     b.Property<bool>("Revised")
                         .HasColumnType("boolean");
 
-                    b.Property<decimal>("UserId")
-                        .HasColumnType("numeric(20,0)");
-
-                    b.HasKey("Id");
+                    b.HasKey("UserId");
 
                     b.ToTable("Authors");
                 });
@@ -169,7 +169,7 @@ namespace DDocsBackend.Data.Migrations
                 {
                     b.HasOne("DDocsBackend.Data.Models.Author", null)
                         .WithMany()
-                        .HasForeignKey("AuthorsId")
+                        .HasForeignKey("AuthorsUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

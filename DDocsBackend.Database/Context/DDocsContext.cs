@@ -34,8 +34,6 @@ namespace DDocsBackend.Data.Context
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            modelBuilder.HasPostgresExtension("fuzzystrmatch");
         }
     }
 }
