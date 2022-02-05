@@ -3,6 +3,7 @@ using System;
 using DDocsBackend.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DDocsBackend.Data.Migrations
 {
     [DbContext(typeof(DDocsContext))]
-    partial class DDocsContextModelSnapshot : ModelSnapshot
+    [Migration("20220205055928_SummaryUpdate")]
+    partial class SummaryUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

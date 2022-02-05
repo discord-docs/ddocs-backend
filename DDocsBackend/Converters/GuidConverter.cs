@@ -1,5 +1,4 @@
-﻿using DDocsBackend.Data.Models;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,22 +7,21 @@ using System.Threading.Tasks;
 
 namespace DDocsBackend.Converters
 {
-    internal class FeatureTypeConverter : JsonConverter
+    internal class GuidConverter : JsonConverter
     {
-        public static FeatureTypeConverter Instance
-           => new();
+        public static GuidConverter Instance
+            => new();
 
         public override bool CanConvert(Type objectType) => true;
-
+        
         public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
         {
-            var value = reader.Value as string;
-            return (FeatureType)Enum.Parse(typeof(SummaryType), value!, true);
+            return Guid.Parse((string)reader.Value!);
         }
 
         public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
         {
-            writer.WriteValue(value!.ToString()!.ToLower());
+            writer.WriteValue((value as Guid?)?.ToString("N"));
         }
     }
 }

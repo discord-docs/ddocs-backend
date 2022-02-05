@@ -12,6 +12,8 @@ namespace DDocsBackend.Converters
 {
     public class DDocsContractResolver : DefaultContractResolver
     {
+        private static readonly MethodInfo? _shouldSerialize = typeof(DDocsContractResolver).GetTypeInfo().GetDeclaredMethod("ShouldSerialize");
+
         protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
         {
             var property = base.CreateProperty(member, memberSerialization);
@@ -41,7 +43,20 @@ namespace DDocsBackend.Converters
             {
                 var genericType = type.GetGenericTypeDefinition();
 
-                if (genericType == typeof(Nullable<>))
+                if (depth == 0 && genericType == typeof(Optional<>))
+                {
+                    var typeInput = info.DeclaringType;
+                    var innerTypeOutput = type.GenericTypeArguments[0];
+
+                    var getter = typeof(Func<,>).MakeGenericType(typeInput!, type);
+                    var getterDelegate = info.GetMethod?.CreateDelegate(getter);
+                    var shouldSerialize = _shouldSerialize?.MakeGenericMethod(typeInput!, innerTypeOutput);
+                    var shouldSerializeDelegate = (Func<object, Delegate, bool>)shouldSerialize!.CreateDelegate(typeof(Func<object, Delegate, bool>));
+                    property.ShouldSerialize = x => shouldSerializeDelegate(x, getterDelegate!);
+
+                    return MakeGenericConverter(property, info, typeof(OptionalConverter<>), innerTypeOutput, depth);
+                }
+                else if (genericType == typeof(Nullable<>))
                     return MakeGenericConverter(property, info, typeof(NullableConverter<>), type.GenericTypeArguments[0], depth);
             }
 
@@ -54,7 +69,15 @@ namespace DDocsBackend.Converters
             if (type == typeof(FeatureType))
                 return FeatureTypeConverter.Instance;
 
+            if (type == typeof(Guid))
+                return GuidConverter.Instance;
+
             return null;
+        }
+
+        private static bool ShouldSerialize<TOwner, TValue>(object? owner, Delegate? getter)
+        {
+            return ((Func<TOwner?, Optional<TValue?>>)getter!)((TOwner?)owner).IsSpecified;
         }
 
         private static JsonConverter? MakeGenericConverter(JsonProperty property, PropertyInfo info, Type converterType, Type innerType, int depth)

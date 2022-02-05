@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.31903.286
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDocsBackend", "DDocsBackend\DDocsBackend.csproj", "{33AC45D7-E1F0-4F42-8CCD-DACE1503E0A0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DDocsBackend", "DDocsBackend\DDocsBackend.csproj", "{33AC45D7-E1F0-4F42-8CCD-DACE1503E0A0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDocsBackend.Data", "DDocsBackend.Database\DDocsBackend.Data.csproj", "{9A5CA9F0-5A53-4BAB-B86A-E0649B4BB0DD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DDocsBackend.Data", "DDocsBackend.Database\DDocsBackend.Data.csproj", "{9A5CA9F0-5A53-4BAB-B86A-E0649B4BB0DD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDocs.Common", "DDocs.Common\DDocs.Common.csproj", "{903E67E8-3A35-47BC-A2BC-E2D0D3DFA8F9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{9A5CA9F0-5A53-4BAB-B86A-E0649B4BB0DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9A5CA9F0-5A53-4BAB-B86A-E0649B4BB0DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9A5CA9F0-5A53-4BAB-B86A-E0649B4BB0DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{903E67E8-3A35-47BC-A2BC-E2D0D3DFA8F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{903E67E8-3A35-47BC-A2BC-E2D0D3DFA8F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{903E67E8-3A35-47BC-A2BC-E2D0D3DFA8F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{903E67E8-3A35-47BC-A2BC-E2D0D3DFA8F9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,4 +1,5 @@
-﻿using DDocsBackend;
+﻿global using DDocs;
+using DDocsBackend;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,6 +39,7 @@ try
         .AddSingleton<DataAccessLayer>()
         .AddSingleton<DiscordOAuthHelper>()
         .AddSingleton<AuthenticationService>()
+        .AddSingleton<CDNService>()
         .AddHostedService<HttpServer>();
     })
     .UseConsoleLifetime();

@@ -66,7 +66,7 @@ public class HttpServer : IHostedService
         {
             var code = await _handler.ProcessRestRequestAsync(context);
             sw.Stop();
-            _log.Debug($"{sw.ElapsedMilliseconds}ms: {GetColorFromMethod(context.Request.HttpMethod)} => {context.Request.RawUrl} {code}", Severity.Rest);
+            _log.Trace($"{sw.ElapsedMilliseconds}ms: {GetColorFromMethod(context.Request.HttpMethod)} => {context.Request.RawUrl} {code}", Severity.Rest);
         }
         catch (Exception x)
         {
@@ -88,7 +88,6 @@ public class HttpServer : IHostedService
                 return Logger.BuildColoredString(method, ConsoleColor.Red);
             default:
                 return Logger.BuildColoredString(method, ConsoleColor.Gray);
-
         }
     }
 

@@ -1,20 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace DDocsBackend.Data.Models
 {
-    public class Authentication
+    public class VerifiedAuthor
     {
         [Key]
         public ulong UserId { get; set; }
 
-        public string? JWTRefreshToken { get; set; }
+        public string? Username { get; set; }
 
-        public DateTimeOffset RefreshExpiresAt { get; set; }
+        public string? Discriminator { get; set; }
     }
 }

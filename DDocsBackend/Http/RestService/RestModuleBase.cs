@@ -38,6 +38,9 @@ public class RestModuleBase
     public DiscordBridgeService DiscordService
         => RestServer!.Provider.GetRequiredService<DiscordBridgeService>();
 
+    public CDNService CDNService
+        => RestServer!.Provider.GetRequiredService<CDNService>();
+
     internal RestModuleInfo? ModuleInfo { get; private set; }
 
     internal void SetRefreshCookie(string token)

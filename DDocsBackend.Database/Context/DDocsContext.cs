@@ -1,5 +1,6 @@
 ﻿using DDocsBackend.Data.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,7 +19,11 @@ namespace DDocsBackend.Data.Context
         public DbSet<Author> Authors { get; set; }
         public DbSet<Authentication> Authentication { get; set; }
         public DbSet<DiscordOAuthAuthentication> DiscordAuthentication { get; set; }
-        public DbSet<VerifiedAuthors> VerifiedAuthors { get; set; }
+        public DbSet<VerifiedAuthor> VerifiedAuthors { get; set; }
+        public DbSet<EventDraft> Drafts { get; set; }
+        public DbSet<Asset> Assets { get; set; }
+
+        private readonly Logger _log;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="DDocsContext"/> class.
@@ -29,11 +34,38 @@ namespace DDocsBackend.Data.Context
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
             : base(options)
         {
+            _log = Logger.GetLogger<DDocsContext>();
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            base.OnModelCreating(modelBuilder);
+            optionsBuilder.LogTo((a, b) => b switch
+            {
+                LogLevel.Trace or 
+                LogLevel.Information or 
+                LogLevel.Critical or
+                LogLevel.Warning or 
+                LogLevel.Error => true,
+                _ => false
+            }, (data) =>
+            {
+                var sevs = new Severity[]
+                {
+                    Severity.Database,
+                    data.LogLevel switch
+                    {
+                        LogLevel.Debug => Severity.Debug,
+                        LogLevel.Critical => Severity.Critical,
+                        LogLevel.Error => Severity.Error,
+                        LogLevel.Information => Severity.Info,
+                        LogLevel.None => Severity.Log,
+                        LogLevel.Trace => Severity.Trace,
+                        LogLevel.Warning => Severity.Warning,
+                        _ => Severity.Log,
+                    }
+                };
+                _log.Write(data.ToString(), sevs);
+            });
         }
     }
 }
