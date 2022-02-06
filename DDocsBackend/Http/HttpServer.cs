@@ -1,4 +1,5 @@
 ﻿using DDocsBackend.Data;
+using DDocsBackend.Http.Websocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using System.Diagnostics;
@@ -9,6 +10,7 @@ namespace DDocsBackend;
 public class HttpServer : IHostedService
 {
     internal readonly IServiceProvider Provider;
+    internal readonly WebsocketServer WebsocketServer;
 
     private readonly HttpListener _listener;
     private readonly HttpRestHandler _handler;
@@ -42,6 +44,8 @@ public class HttpServer : IHostedService
 #endif
 
         _handler = new(this);
+
+        WebsocketServer = new WebsocketServer(this);
 
         _port = port;
     }

@@ -60,7 +60,13 @@ namespace DDocsBackend.Services
         /// <exception cref="SignatureVerificationException"></exception>
         public async Task<Authentication?> GetAuthenticationAsync(string jwt)
         {
-            var decoded = Decode<JWTPayload>(jwt);
+            var decoded = Decode<JWTPayload?>(jwt);
+
+            if (decoded == null)
+                return null;
+
+            if (decoded.ExpiresAt < DateTimeOffset.UtcNow)
+                return null;
 
             return await _dataAccessLayer.GetAuthenticationAsync(decoded.UserId);
         }
