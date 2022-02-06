@@ -14,5 +14,7 @@ namespace DDocsBackend.Http.Websocket
         HeartbeatAck,
         SwitchingPage,
         Event,
+        GetUsers,
+        Users,
     }
 }

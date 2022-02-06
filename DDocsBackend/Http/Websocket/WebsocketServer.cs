@@ -24,21 +24,20 @@ namespace DDocsBackend.Http.Websocket
         public const int IdentityTimeout = 5000;
         public const int MaxPacketSize = 2048;
 
-        private readonly HttpServer _server;
+        public List<SocketClient> ConnectedClients { get; } = new();
+        public HttpServer Server { get; }
+        
         private readonly Logger _log;
 
-        private readonly List<SocketClient> _connectedClients = new();
-
         private AuthenticationService _authenticationService
-            => _server.Provider.GetRequiredService<AuthenticationService>();
-
+            => Server.Provider.GetRequiredService<AuthenticationService>();
         private DataAccessLayer _dataAccessLayer
-            => _server.Provider.GetRequiredService<DataAccessLayer>();
+            => Server.Provider.GetRequiredService<DataAccessLayer>();
 
         public WebsocketServer(HttpServer server)
         {
             _log = Logger.GetLogger<WebsocketServer>();
-            _server = server;
+            Server = server;
         }
 
         public int DispatchEvent(EventTypes type, object payload)
@@ -53,7 +52,7 @@ namespace DDocsBackend.Http.Websocket
                 }
             };
 
-            var clients = _connectedClients.Where(x => x.IsConnected && x.Events.HasFlag(type));
+            var clients = ConnectedClients.Where(x => x.IsConnected && x.Events.HasFlag(type));
 
             _ = Task.Run(async () => await Task.WhenAll(clients.Select(x => x.SendAsync(packet))));
 
@@ -123,13 +122,13 @@ namespace DDocsBackend.Http.Websocket
                     return false;
                 }
 
-                var client = new SocketClient(authentication, identity.Events, socket.WebSocket);
+                var client = new SocketClient(authentication, identity, socket.WebSocket, this);
 
-                _connectedClients.Add(client);
+                ConnectedClients.Add(client);
 
                 client.OnDisconnect += () =>
                 {
-                    _connectedClients.Remove(client);
+                    ConnectedClients.Remove(client);
                     _log.Info($"User {client.UserId} disconnected", Severity.Socket);
                     return Task.CompletedTask;
                 };

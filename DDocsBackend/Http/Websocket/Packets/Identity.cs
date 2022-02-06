@@ -15,9 +15,12 @@ namespace DDocsBackend.Http.Websocket
         [JsonProperty("events")]
         public EventTypes Events { get; set; }
 
+        [JsonProperty("page")]
+        public string? Page { get; set; }
+
         public bool Validate()
         {
-            return !string.IsNullOrEmpty(Token);
+            return !string.IsNullOrEmpty(Token) && !string.IsNullOrEmpty(Page);
         }
     }
 }

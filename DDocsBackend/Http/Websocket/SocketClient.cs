@@ -1,4 +1,6 @@
 ﻿using DDocsBackend.Data.Models;
+using DDocsBackend.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -12,6 +14,7 @@ namespace DDocsBackend.Http.Websocket
     public class SocketClient
     {
         public const int HearbeatInterval = 31000;
+        public string CurrentPage { get; private set; }
 
         public event Func<Packet, Task>? PayloadReceived
         {
@@ -37,15 +40,17 @@ namespace DDocsBackend.Http.Websocket
         private readonly Logger _log;
         private CancellationTokenSource _cancelToken;
         private TaskCompletionSource _heartbeatReceived = new();
+        private readonly WebsocketServer _server;
 
-
-        public SocketClient(Authentication auth, EventTypes types, WebSocket socket)
+        public SocketClient(Authentication auth, Identity identity, WebSocket socket, WebsocketServer server)
         {
-            Events = types;
+            Events = identity.Events;
+            CurrentPage = identity.Page!;
             UserId = auth.UserId;
             _log = Logger.GetLogger<SocketClient>();
             _socket = socket;
             _cancelToken = new();
+            _server = server;
 
             // start heartbeat and listen loop
             _receiveLoop = Task.Run(async () => await ReceiveAsync());
@@ -124,6 +129,29 @@ namespace DDocsBackend.Http.Websocket
                         await SendAsync(new Packet
                         {
                             Type = PacketType.HeartbeatAck
+                        });
+                    }
+                    break;
+                case PacketType.SwitchingPage:
+                    {
+                        var payload = p.PayloadAs<PageSwitch>();
+                        if (payload == null || payload.Page == null)
+                            return;
+
+                        CurrentPage = payload.Page;
+                    }
+                    break;
+                case PacketType.GetUsers:
+                    {
+                        var otherUsers = _server.ConnectedClients.Where(x => x.UserId != UserId && x.CurrentPage == CurrentPage);
+
+                        await SendAsync(new Packet
+                        {
+                            Type = PacketType.Users,
+                            Payload = new UsersResult
+                            {
+                                Users = await Task.WhenAll(otherUsers.Select(x => x.ToAuthorAsync())).ConfigureAwait(false)
+                            }
                         });
                     }
                     break;
@@ -263,6 +291,21 @@ namespace DDocsBackend.Http.Websocket
                     }
                 });
             }
+        }
+
+        private async Task<RestModels.Author> ToAuthorAsync()
+        {
+            var bridgeService = _server.Server.Provider.GetRequiredService<DiscordBridgeService>();
+
+            var user = await bridgeService.GetUserDetailsAsync(UserId).ConfigureAwait(false);
+
+            return new RestModels.Author
+            {
+                Avatar = user.Avatar,
+                Discriminator = user.Discriminator,
+                UserId = UserId,
+                Username = user.Username
+            };
         }
     }
 }
