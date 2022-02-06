@@ -310,6 +310,22 @@ namespace DDocsBackend.Data
             return await context.VerifiedAuthors.FindAsync(userId).ConfigureAwait(false);
         }
 
+        public async Task<VerifiedAuthor?> ModifyVerifiedAuthorAsync(ulong userId, Action<VerifiedAuthor> func)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            var author = await context.VerifiedAuthors.FindAsync(userId).ConfigureAwait(false);
+
+            if (author == null)
+                return null;
+
+            func(author);
+
+            await context.SaveChangesAsync().ConfigureAwait(false);
+
+            return author;
+        }
+
         public async Task DeleteAuthenticationAsync(Authentication auth)
         {
             using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);

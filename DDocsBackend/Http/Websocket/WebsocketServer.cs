@@ -81,7 +81,7 @@ namespace DDocsBackend.Http.Websocket
                 }
                 catch (TaskCanceledException)
                 {
-                    _log.Warn("Client connected but didn't semd handshake", Severity.Socket);
+                    _log.Warn("Client connected but didn't send handshake", Severity.Socket);
                     await socket.WebSocket.CloseAsync(WebSocketCloseStatus.ProtocolError, "No handshake", default).ConfigureAwait(false);
                     return false;
                 }
@@ -130,8 +130,11 @@ namespace DDocsBackend.Http.Websocket
                 client.OnDisconnect += () =>
                 {
                     _connectedClients.Remove(client);
+                    _log.Info($"User {client.UserId} disconnected", Severity.Socket);
                     return Task.CompletedTask;
                 };
+
+                _log.Info($"New websocket connection from {client.UserId}!", Severity.Socket);
 
                 return true;
 
@@ -188,7 +191,7 @@ namespace DDocsBackend.Http.Websocket
                 packet.AddRange(buff.Take(result.Count));
             }
 
-            if(packet.Count < MaxPacketSize)
+            if(packet.Count > MaxPacketSize)
             {
                 await socket.CloseAsync(WebSocketCloseStatus.MessageTooBig, null, default).ConfigureAwait(false);
                 return null;

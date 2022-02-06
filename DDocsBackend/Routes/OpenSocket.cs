@@ -9,17 +9,12 @@ namespace DDocsBackend.Routes
     public class OpenSocket : RestModuleBase
     {
         [Route("/socket", "GET")]
-        [RequireAuthentication]
         public async Task<RestResult> ExecuteAsync()
         {
             if (!Request.IsWebSocketRequest)
                 return RestResult.BadRequest;
 
             var result = await WebsocketServer.TryAcceptSocketAsync(Context).ConfigureAwait(false);
-
-            if (!result)
-                return RestResult.BadRequest;
-
             return RestResult.NoAction;
         }
     }

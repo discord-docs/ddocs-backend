@@ -15,5 +15,7 @@ namespace DDocsBackend.Data.Models
         public string? Username { get; set; }
 
         public string? Discriminator { get; set; }
+
+        public string? AvatarId { get; set; }
     }
 }

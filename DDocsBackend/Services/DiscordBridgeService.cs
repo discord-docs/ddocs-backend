@@ -58,7 +58,7 @@ namespace DDocsBackend.Services
             if(verifiedAuthor != null)
             {
                 // check their avatar hash against their user
-                var pfp = await _dataAccessLayer.GetAssetAsync($"{id}").ConfigureAwait(false);
+                var pfp = verifiedAuthor.AvatarId != null ? await _dataAccessLayer.GetAssetAsync(verifiedAuthor.AvatarId).ConfigureAwait(false) : null;
 
                 if(pfp != null)
                 {
@@ -115,6 +115,10 @@ namespace DDocsBackend.Services
                     // cache it
                     var details = new UserDetails(user, asset.Id!);
                     _cache.Set($"{id}", details, DateTime.UtcNow.AddDays(1));
+
+                    // modify them
+                    await _dataAccessLayer.ModifyVerifiedAuthorAsync(id, x => x.AvatarId = asset.Id).ConfigureAwait(false);
+
                     return details;
                 }
             }

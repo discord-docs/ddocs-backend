@@ -11,7 +11,7 @@ namespace DDocsBackend.Http.Websocket
 {
     public class SocketClient
     {
-        public const int HearbeatInterval = 30000;
+        public const int HearbeatInterval = 31000;
 
         public event Func<Packet, Task>? PayloadReceived
         {
@@ -64,45 +64,53 @@ namespace DDocsBackend.Http.Websocket
 
         private async Task ReceiveAsync()
         {
-            while (IsConnected)
+            try
             {
-                var result = await GetPacketAsync(_cancelToken.Token).ConfigureAwait(false);
-
-                if(!result.HasValue)
+                while (IsConnected)
                 {
-                    _log.Warn($"Got payload over 2kb from {UserId}", Severity.Socket);
-                    return; // return because if the result is null that means we've closed the socket so no need to listen anymore.
-                }
+                    var result = await GetPacketAsync(_cancelToken.Token).ConfigureAwait(false);
 
-                if (result.Value.Result != null)
-                {
-                    _log.Warn($"Got invalid payload from {UserId}", Severity.Socket);
-                    return; // return because if the WebSocketReceiveResult is not null that means we've closed the socket so no need to listen anymore.
-                }
+                    if (!result.HasValue)
+                    {
+                        _log.Warn($"Got payload over 2kb from {UserId}", Severity.Socket);
+                        return; // return because if the result is null that means we've closed the socket so no need to listen anymore.
+                    }
 
-                // decode the payload
-                Packet? packet = null;
-                try
-                {
-                    string json = Encoding.UTF8.GetString(result.Value.Data.ToArray());
+                    if (result.Value.Result != null)
+                    {
+                        _log.Warn($"Got invalid payload from {UserId}", Severity.Socket);
+                        return; // return because if the WebSocketReceiveResult is not null that means we've closed the socket so no need to listen anymore.
+                    }
 
-                    packet = JsonConvert.DeserializeObject<Packet>(json);
-                }
-                catch(Exception x)
-                {
-                    _log.Error($"Failed to parse packet content from {UserId}", Severity.Socket, x);
-                    await DisconnectAsync(WebSocketCloseStatus.InvalidPayloadData).ConfigureAwait(false);
-                    return;
-                }
+                    // decode the payload
+                    Packet? packet = null;
+                    try
+                    {
+                        string json = Encoding.UTF8.GetString(result.Value.Data.ToArray());
 
-                if(packet == null)
-                {
-                    _log.Warn($"Got null packet from {UserId}", Severity.Socket);
-                    await DisconnectAsync(WebSocketCloseStatus.InvalidPayloadData).ConfigureAwait(false);
-                    return;
-                }
+                        packet = JsonConvert.DeserializeObject<Packet>(json);
+                    }
+                    catch (Exception x)
+                    {
+                        _log.Error($"Failed to parse packet content from {UserId}", Severity.Socket, x);
+                        await DisconnectAsync(WebSocketCloseStatus.InvalidPayloadData).ConfigureAwait(false);
+                        return;
+                    }
 
-                _ = Task.Run(async () => await HandlePacketAsync(packet));
+                    if (packet == null)
+                    {
+                        _log.Warn($"Got null packet from {UserId}", Severity.Socket);
+                        await DisconnectAsync(WebSocketCloseStatus.InvalidPayloadData).ConfigureAwait(false);
+                        return;
+                    }
+
+                    _ = Task.Run(async () => await HandlePacketAsync(packet));
+                }
+            }
+            catch (OperationCanceledException) { }
+            catch(Exception x)
+            {
+                _log.Critical("Failed in read loop for socket", Severity.Socket, x);
             }
         }
 
@@ -127,9 +135,12 @@ namespace DDocsBackend.Http.Websocket
 
         public async Task HeartbeatAsync()
         {
-            while (true)
+            while (IsConnected)
             {
                 await Task.WhenAny(_heartbeatReceived.Task, Task.Delay(HearbeatInterval));
+
+                if (_cancelToken.IsCancellationRequested)
+                    return;
 
                 if (!_heartbeatReceived.Task.IsCompleted)
                 {
@@ -169,13 +180,13 @@ namespace DDocsBackend.Http.Websocket
                     packet.AddRange(buff.Take(result.Count));
                 }
             }
-            catch(Exception x)
+            catch (Exception x) when (x.GetType() != typeof(OperationCanceledException))
             {
                 _log.Error("Failed to read from socket", Severity.Socket, x);
                 return null;
             }
 
-            if (packet.Count < WebsocketServer.MaxPacketSize)
+            if (packet.Count > WebsocketServer.MaxPacketSize)
             {
                 await DisconnectAsync(WebSocketCloseStatus.MessageTooBig, null, default).ConfigureAwait(false);
                 return null;
