@@ -22,6 +22,7 @@ namespace DDocsBackend.Data.Context
         public DbSet<VerifiedAuthor> VerifiedAuthors { get; set; }
         public DbSet<EventDraft> Drafts { get; set; }
         public DbSet<Asset> Assets { get; set; }
+        public DbSet<DiscordUserPfp> UserProfiles { get; set; }
 
         private readonly Logger _log;
 
@@ -35,6 +36,14 @@ namespace DDocsBackend.Data.Context
             : base(options)
         {
             _log = Logger.GetLogger<DDocsContext>();
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<DiscordUserPfp>()
+                .HasOne<Asset>(s => s.Asset)
+                .WithOne()
+                .HasForeignKey<DiscordUserPfp>(ad => ad.AssetId);
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

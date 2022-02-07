@@ -136,12 +136,27 @@ namespace DDocsBackend.Services
                     return unknownUser;
                 }
 
-                // create their avatar
-                var asset = await _dataAccessLayer.CreateAssetAsync(AssetType.Avatar, ContentType.Png).ConfigureAwait(false);
-                await CreateAvatarAssetAsync(user, asset.Id!).ConfigureAwait(false);
+                string assetId;
+
+                var pfp = await _dataAccessLayer.GetUserPfp(id).ConfigureAwait(false);
+
+                if (pfp != null)
+                {
+                    assetId = pfp.Asset!.Id!;
+                }
+                else
+                {
+                    // create their avatar
+                    var asset = await _dataAccessLayer.CreateAssetAsync(AssetType.Avatar, ContentType.Png).ConfigureAwait(false);
+                    await CreateAvatarAssetAsync(user, asset.Id!).ConfigureAwait(false);
+
+                    await _dataAccessLayer.CreateUserPfp(id, asset);
+
+                    assetId = asset.Id!;
+                }
 
                 // cache it
-                var details = new UserDetails(user, asset.Id!);
+                var details = new UserDetails(user, assetId);
                 _cache.Set($"{id}", details, DateTime.UtcNow.AddDays(1));
                 return details;
             }

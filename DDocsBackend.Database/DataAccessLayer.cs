@@ -18,6 +18,28 @@ namespace DDocsBackend.Data
             _contextFactory = contextFactory;
         }
 
+        public async Task<DiscordUserPfp?> GetUserPfp(ulong id)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            return await context.UserProfiles.Include(x => x.Asset).FirstOrDefaultAsync(x => x.UserId == id).ConfigureAwait(false);
+        }
+
+        public async Task<DiscordUserPfp> CreateUserPfp(ulong id, Asset asset)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            var result = await context.UserProfiles.AddAsync(new DiscordUserPfp
+            {
+                AssetId = asset.Id,
+                UserId = id
+            }).ConfigureAwait(false);
+
+            await context.SaveChangesAsync().ConfigureAwait(false);
+
+            return result.Entity;
+        }
+
         public Task<Asset?> GetAssetAsync(Guid id)
             => GetAssetAsync(id.ToString("N"));
         public async Task<Asset?> GetAssetAsync(string id)

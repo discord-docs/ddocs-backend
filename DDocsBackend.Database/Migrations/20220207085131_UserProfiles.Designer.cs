@@ -3,6 +3,7 @@ using System;
 using DDocsBackend.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DDocsBackend.Data.Migrations
 {
     [DbContext(typeof(DDocsContext))]
-    partial class DDocsContextModelSnapshot : ModelSnapshot
+    [Migration("20220207085131_UserProfiles")]
+    partial class UserProfiles
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -131,8 +133,7 @@ namespace DDocsBackend.Data.Migrations
 
                     b.HasKey("UserId");
 
-                    b.HasIndex("AssetId")
-                        .IsUnique();
+                    b.HasIndex("AssetId");
 
                     b.ToTable("UserProfiles");
                 });
@@ -287,8 +288,8 @@ namespace DDocsBackend.Data.Migrations
             modelBuilder.Entity("DDocsBackend.Data.Models.DiscordUserPfp", b =>
                 {
                     b.HasOne("DDocsBackend.Data.Models.Asset", "Asset")
-                        .WithOne()
-                        .HasForeignKey("DDocsBackend.Data.Models.DiscordUserPfp", "AssetId");
+                        .WithMany()
+                        .HasForeignKey("AssetId");
 
                     b.Navigation("Asset");
                 });
