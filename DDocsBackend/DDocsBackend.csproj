@@ -29,6 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DDocsBackend.Common\DDocsBackend.Common.csproj" />
     <ProjectReference Include="..\DDocsBackend.Database\DDocsBackend.Data.csproj" />
   </ItemGroup>
 

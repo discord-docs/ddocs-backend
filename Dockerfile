@@ -6,6 +6,7 @@ WORKDIR /build
 COPY DDocsBackend.sln /build
 COPY DDocsBackend/DDocsBackend.csproj /build/DDocsBackend/
 COPY DDocsBackend.Database/DDocsBackend.Data.csproj /build/DDocsBackend.Database/
+COPY DDocsBackend.Common/DDocsBackend.Common.csproj /build/DDocsBackend.Common/
 RUN dotnet restore DDocsBackend.sln
 
 COPY . /build
