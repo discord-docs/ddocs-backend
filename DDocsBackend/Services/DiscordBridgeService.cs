@@ -16,14 +16,22 @@ namespace DDocsBackend.Services
 {
     public class DiscordBridgeService
     {
+        // The number of days an avatar will last before refreshed.
+        public const int AvatarLifecyleDuration = 7;
+
+        private DateTimeOffset AvatarExpiration
+            => DateTimeOffset.UtcNow.AddDays(-AvatarLifecyleDuration);
+
         private AuthenticationService _authService;
         private DiscordOAuthHelper _oauthHelper;
         private DataAccessLayer _dataAccessLayer;
         private ObjectCache _cache;
         private readonly string _token;
         private readonly DiscordRestClient _botClient;
+        private readonly CDNService _cdn;
+        private readonly SemaphoreSlim _lock;
 
-        public DiscordBridgeService(AuthenticationService authService, DiscordOAuthHelper oauthHelper, DataAccessLayer dataAccessLayer, IConfiguration config)
+        public DiscordBridgeService(CDNService cdn, AuthenticationService authService, DiscordOAuthHelper oauthHelper, DataAccessLayer dataAccessLayer, IConfiguration config)
         {
             _token = config["BOT_TOKEN"];
             _authService = authService;
@@ -31,6 +39,140 @@ namespace DDocsBackend.Services
             _dataAccessLayer = dataAccessLayer;
             _cache = MemoryCache.Default;
             _botClient = new();
+            _cdn = cdn;
+            _lock = new SemaphoreSlim(1, 1);
+        }
+
+        public async Task<UserDetails> GetUserDetailsAsync(ulong id)
+        {
+            var cached = _cache.Get($"{id}");
+
+            if(cached != null)
+            {
+                return (UserDetails)cached!;
+            }
+
+            var unknownUser = new UserDetails("Unknown", "0000", id, GetDefaultAvatar(id));
+
+            // load from database, try verified authors
+            var verifiedAuthor = await _dataAccessLayer.GetVerifiedAuthorAsync(id).ConfigureAwait(false);
+
+            if(verifiedAuthor != null)
+            {
+                // check their avatar hash against their user
+                var pfp = verifiedAuthor.AvatarId != null ? await _dataAccessLayer.GetAssetAsync(verifiedAuthor.AvatarId).ConfigureAwait(false) : null;
+
+                if(pfp != null)
+                {
+                    // check the avatars creation time and then check our policy for wether or not to try to update it
+                    if(pfp.CreatedAt < AvatarExpiration)
+                    {
+                        // get their user from discord
+                        var user = await GetUserAsync(id).ConfigureAwait(false);
+
+                        if(user == null)
+                        {
+                            // return their previous avatar
+                            var tempDetails = new UserDetails(verifiedAuthor.Username!, verifiedAuthor.Discriminator!, verifiedAuthor.UserId, pfp.Id!);
+                            // cache for an hour or so?
+                            _cache.Set($"{id}", tempDetails, DateTime.UtcNow.AddHours(1));
+                            return tempDetails;
+                        }
+
+                        // refresh their avatar
+                        await CreateAvatarAssetAsync(user, pfp.Id!).ConfigureAwait(false);
+
+                        // modify the create date
+                        await _dataAccessLayer.ModifyAssetAsync(pfp.Id!, x => x.CreatedAt = DateTimeOffset.UtcNow).ConfigureAwait(false);
+
+                        // cache it
+                        var details = new UserDetails(user, pfp.Id!);
+                        _cache.Set($"{id}", details, DateTime.UtcNow.AddDays(1));
+                        return details;
+                    }
+                    else
+                    {
+                        return new UserDetails(verifiedAuthor.Username!, verifiedAuthor.Discriminator!, verifiedAuthor.UserId, pfp.Id!);
+                    }
+                }
+                else
+                {
+                    // they don't have an asset, try to get their user and create one
+
+                    // get their user from discord
+                    var user = await GetUserAsync(id).ConfigureAwait(false);
+
+                    if(user == null)
+                    {
+                        // at this point we haven't created an asset for them and we can't get their user info with a bot or with oauth,
+                        // lets just return a default avatar
+                        _cache.Set($"{id}", unknownUser, DateTime.UtcNow.AddMinutes(10));
+                        return unknownUser;
+                    }
+
+                    // create their avatar
+                    var asset = await _dataAccessLayer.CreateAssetAsync(AssetType.Avatar, ContentType.Png).ConfigureAwait(false);
+                    await CreateAvatarAssetAsync(user, asset.Id!).ConfigureAwait(false);
+
+                    // cache it
+                    var details = new UserDetails(user, asset.Id!);
+                    _cache.Set($"{id}", details, DateTime.UtcNow.AddDays(1));
+
+                    // modify them
+                    await _dataAccessLayer.ModifyVerifiedAuthorAsync(id, x => x.AvatarId = asset.Id).ConfigureAwait(false);
+
+                    return details;
+                }
+            }
+            else
+            {
+                // try getting from discord
+                var user = await GetUserAsync(id).ConfigureAwait(false);
+
+                if (user == null)
+                {
+                    // cache for ratelimits
+                    _cache.Set($"{id}", unknownUser, DateTime.UtcNow.AddMinutes(10));
+                    return unknownUser;
+                }
+
+                string assetId;
+
+                var pfp = await _dataAccessLayer.GetUserPfp(id).ConfigureAwait(false);
+
+                if (pfp != null)
+                {
+                    assetId = pfp.Asset!.Id!;
+                }
+                else
+                {
+                    // create their avatar
+                    var asset = await _dataAccessLayer.CreateAssetAsync(AssetType.Avatar, ContentType.Png).ConfigureAwait(false);
+                    await CreateAvatarAssetAsync(user, asset.Id!).ConfigureAwait(false);
+
+                    await _dataAccessLayer.CreateUserPfp(id, asset);
+
+                    assetId = asset.Id!;
+                }
+
+                // cache it
+                var details = new UserDetails(user, assetId);
+                _cache.Set($"{id}", details, DateTime.UtcNow.AddDays(1));
+                return details;
+            }
+        }
+
+        private async Task CreateAvatarAssetAsync(IUser user, string id)
+        {
+            using(var httpClient = new HttpClient())
+            {
+                var result = await httpClient.GetAsync(user.GetAvatarUrl(ImageFormat.Png) ?? user.GetDefaultAvatarUrl()).ConfigureAwait(false);
+
+                using (var image = SixLabors.ImageSharp.Image.Load(await result.Content.ReadAsStreamAsync()))
+                {
+                    await _cdn.WriteAsync(id, AssetType.Avatar, ContentType.Png, image);
+                }
+            }
         }
 
         public async ValueTask<IUser?> GetUserAsync(ulong id)
@@ -40,13 +182,25 @@ namespace DDocsBackend.Services
             if (cached != null)
                 return cached as IUser;
 
+            await _lock.WaitAsync().ConfigureAwait(false);
+
             if (_botClient.LoginState != LoginState.LoggedIn)
                 await _botClient.LoginAsync(TokenType.Bot, _token);
 
             var user = await _botClient.GetUserAsync(id);
 
+            _lock.Release();
+
             if (user == null)
-                return null;
+            {
+                // get with oauth?
+                var oauth = await _dataAccessLayer.GetDiscordOAuthAsync(id).ConfigureAwait(false);
+
+                if (oauth == null)
+                    return null;
+
+                return await GetUserAsync(oauth).ConfigureAwait(false);
+            }
 
             _cache.Add($"{id}", user, DateTime.UtcNow.AddDays(1));
 
@@ -118,6 +272,25 @@ namespace DDocsBackend.Services
 
             auth = (await _dataAccessLayer.ApplyDiscordOAuthRefresh(auth.UserId, result.AccessToken, result.RefreshToken, DateTimeOffset.UtcNow.AddSeconds(result.ExpiresIn)))!;
             return true;
+        }
+    }
+
+    public class UserDetails
+    {
+        public string Username { get; set; }
+        public string Discriminator { get; set; }
+        public string Avatar { get; set; }
+        public ulong UserId { get; set; }
+
+        public UserDetails(IUser user, string avatar)
+            : this(user.Username, user.Discriminator, user.Id, avatar) { }
+
+        public UserDetails(string username, string discriminator, ulong userId, string avatar)
+        {
+            Username = username;
+            Discriminator = discriminator;
+            Avatar = avatar;
+            UserId = userId;
         }
     }
 }

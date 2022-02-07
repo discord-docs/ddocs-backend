@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <PackageReference Include="Discord.Net.Rest" Version="3.2.1" />
+    <PackageReference Include="HttpMultipartParser" Version="5.0.1" />
     <PackageReference Include="JWT" Version="8.9.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.1">
       <PrivateAssets>all</PrivateAssets>
@@ -25,10 +26,12 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
     <PackageReference Include="System.Runtime.Caching" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DDocs.Common\DDocs.Common.csproj" />
     <ProjectReference Include="..\DDocsBackend.Database\DDocsBackend.Data.csproj" />
   </ItemGroup>
 

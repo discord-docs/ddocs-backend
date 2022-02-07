@@ -17,7 +17,7 @@ namespace DDocsBackend.Converters
 
         public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
         {
-            var value = reader.ReadAsString();
+            var value = reader.Value as string;
             return (FeatureType)Enum.Parse(typeof(SummaryType), value!, true);
         }
 
