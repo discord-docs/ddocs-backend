@@ -60,7 +60,25 @@ namespace DDocsBackend.Services
         /// <exception cref="SignatureVerificationException"></exception>
         public async Task<Authentication?> GetAuthenticationAsync(string jwt)
         {
-            var decoded = Decode<JWTPayload>(jwt);
+#if DEBUG
+            return new Authentication
+            {
+                UserId = 259053800755691520,
+                JWTRefreshToken = "testing",
+                RefreshExpiresAt = DateTime.UtcNow.AddDays(1)
+            };
+#pragma warning disable CS0162 // Unreachable code detected
+
+#endif
+
+            var decoded = Decode<JWTPayload?>(jwt);
+#pragma warning restore CS0162 // Unreachable code detected
+
+            if (decoded == null)
+                return null;
+
+            if (decoded.ExpiresAt < DateTimeOffset.UtcNow)
+                return null;
 
             return await _dataAccessLayer.GetAuthenticationAsync(decoded.UserId);
         }

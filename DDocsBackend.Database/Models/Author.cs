@@ -14,11 +14,6 @@ namespace DDocsBackend.Data.Models
     /// </summary>
     public partial class Author
     {
-        public Author()
-        {
-
-        }
-
         [Key]
         public Guid Id { get; set; }
 

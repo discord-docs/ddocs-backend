@@ -1,6 +1,7 @@
 ﻿using DDocsBackend.Data;
 using DDocsBackend.Data.Models;
 using DDocsBackend.Helpers;
+using DDocsBackend.Http.Websocket;
 using DDocsBackend.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
@@ -37,6 +38,12 @@ public class RestModuleBase
 
     public DiscordBridgeService DiscordService
         => RestServer!.Provider.GetRequiredService<DiscordBridgeService>();
+
+    public CDNService CDNService
+        => RestServer!.Provider.GetRequiredService<CDNService>();
+
+    public WebsocketServer WebsocketServer
+        => RestServer!.WebsocketServer;
 
     internal RestModuleInfo? ModuleInfo { get; private set; }
 

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 
-namespace DDocsBackend;
+namespace DDocs;
 
 public enum Severity
 {
@@ -18,6 +18,7 @@ public enum Severity
     Rest,
     Socket,
     Core,
+    Database,
 }
 
 public enum StreamType
@@ -53,6 +54,7 @@ public class Logger
         { Severity.Verbose, ConsoleColor.DarkCyan },
         { Severity.Info, ConsoleColor.White },
         { Severity.Trace, ConsoleColor.Yellow },
+        { Severity.Database, ConsoleColor.Blue },
     };
     public void Trace(string content, Severity severity = Severity.Core, Exception? exception = null, bool stdErr = false)
         => Write(content, exception, stdErr, severity, Severity.Trace);
@@ -143,7 +145,7 @@ public class Logger
         => GetLogger(typeof(TType));
     public static Logger GetLogger(Type t)
     {
-        return new Logger(t.Name);
+        return new Logger($"{t.Assembly.GetName().Name}:{t.Name}");
     }
 
     public static void AddStream(Stream stream, StreamType type)

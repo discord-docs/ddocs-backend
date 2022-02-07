@@ -1,4 +1,5 @@
-﻿using DDocsBackend.Data.Context;
+﻿global using DDocs;
+using DDocsBackend.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using DDocsBackend.Data.Models;
 using Fastenshtein;
@@ -15,6 +16,77 @@ namespace DDocsBackend.Data
         public DataAccessLayer(IDbContextFactory<DDocsContext> contextFactory)
         {
             _contextFactory = contextFactory;
+        }
+
+        public async Task<DiscordUserPfp?> GetUserPfp(ulong id)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            return await context.UserProfiles.Include(x => x.Asset).FirstOrDefaultAsync(x => x.UserId == id).ConfigureAwait(false);
+        }
+
+        public async Task<DiscordUserPfp> CreateUserPfp(ulong id, Asset asset)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            var result = await context.UserProfiles.AddAsync(new DiscordUserPfp
+            {
+                AssetId = asset.Id,
+                UserId = id
+            }).ConfigureAwait(false);
+
+            await context.SaveChangesAsync().ConfigureAwait(false);
+
+            return result.Entity;
+        }
+
+        public Task<Asset?> GetAssetAsync(Guid id)
+            => GetAssetAsync(id.ToString("N"));
+        public async Task<Asset?> GetAssetAsync(string id)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            return await context.Assets.Include(x => x.Thumbnail).FirstOrDefaultAsync(x => x.Id == id).ConfigureAwait(false);
+        }
+
+        public async Task<Asset> CreateAssetAsync(AssetType type, ContentType contentType, AssetType? thumnailType = null, ContentType? thumbnailContenType = null)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            var entity = await context.Assets.AddAsync(new Asset
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                ContentType = contentType,
+                Type = type,
+                CreatedAt = DateTimeOffset.UtcNow,
+                Thumbnail = thumnailType.HasValue && thumbnailContenType.HasValue ? new Asset
+                {
+                    ContentType = thumbnailContenType.Value,
+                    Type = thumnailType.Value,
+                    CreatedAt = DateTimeOffset.UtcNow,
+                    Id = Guid.NewGuid().ToString("N"),
+                } : null
+            }).ConfigureAwait(false);
+
+            await context.SaveChangesAsync().ConfigureAwait(false);
+
+            return entity.Entity;
+        }
+
+        public async Task<Asset?> ModifyAssetAsync(string id, Action<Asset> func)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            var asset = await context.Assets.Include(x => x.Thumbnail).FirstOrDefaultAsync(x => x.Id == id).ConfigureAwait(false);
+
+            if (asset == null)
+                return null;
+
+            func(asset);
+
+            await context.SaveChangesAsync().ConfigureAwait(false);
+
+            return asset;
         }
 
         public async Task<Event[]> GetEventsAsync(int year)
@@ -102,7 +174,6 @@ namespace DDocsBackend.Data
                     new Summary
                     {
                         Content = "Test content with just long text: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-                        EventId = id,
                         IsNew = true,
                         Status = null,
                         SummaryId = Guid.NewGuid(),
@@ -114,7 +185,6 @@ namespace DDocsBackend.Data
                     new Summary
                     {
                         Content = "# h1\r\n## h2\r\n### h3\r\n#### h4\r\n##### h5\r\n###### h6\r\n\r\nText\r\n\r\n**Bold**\r\n\r\n*Italic*\r\n\r\n~~Strikethru~~\r\n\r\n[Link](https://discord.com/channels/936725123724111953/937130072551346216/938543687196090428)\r\n\r\n![Image](https://media.discordapp.net/attachments/937130072551346216/938543686432718928/unknown.png?width=1351&height=903)\r\n\r\n```\r\nCode block no lang\r\n```\r\n\r\n```json\r\n{\r\n\t\"lang\": \"json\"\r\n}\r\n```\r\n\r\nBulletpoints:\r\n- A\r\n- B\r\n- C\r\n\r\nNumbered:\r\n1. One\r\n2. Two\r\n3. Three\r\n\r\nDouble indenting\r\n- Level one\r\n\t- Level two\r\n\t\t- Level 3\r\n\t\t\t- Level 4\r\n\r\nQuote\r\n> I said that\r\n\r\nLine\r\n\r\n---\r\n\r\nEnd line",
-                        EventId = id,
                         IsNew = false,
                         Status = null,
                         SummaryId = Guid.NewGuid(),
@@ -126,7 +196,6 @@ namespace DDocsBackend.Data
                     new Summary
                     {
                         Content = "Test content\n# h1\n## h2\n ### h3\n#### h4",
-                        EventId = id,
                         IsNew = true,
                         Status = FeatureType.ClosedBeta,
                         SummaryId = Guid.NewGuid(),
@@ -138,7 +207,6 @@ namespace DDocsBackend.Data
                     new Summary
                     {
                         Content = "# Discord Developer Stage - January 2022\r\nThis is the description text underneath.\r\n\r\n## What\'s new\r\n- blah\r\n  - bulletpoint\r\n  > text\r\n  [link](https://discord.com/channels/936725123724111953/937130072551346216/937804751289081866)\r\n![image](https://media.discordapp.net/attachments/937130072551346216/937804320710230037/unknown.png?width=1309&height=903)",
-                        EventId = id,
                         IsNew = true,
                         Status = FeatureType.PlannedQ2,
                         SummaryId = Guid.NewGuid(),
@@ -152,6 +220,58 @@ namespace DDocsBackend.Data
             };
 
             return ev;
+        }
+
+        public async Task<IEnumerable<EventDraft>> GetDraftsAsync()
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            return await context.Drafts.Include(x => x.Summaries).Include(x => x.Author).Include(x => x.Contributors).ToListAsync().ConfigureAwait(false);
+        }
+
+        public async Task<EventDraft?> GetDraftAsync(Guid id)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            return await context.Drafts.Include(x => x.Summaries).Include(x => x.Author).Include(x => x.Contributors).FirstOrDefaultAsync(x => x.DraftId == id);
+        }
+
+        public async Task<EventDraft> CreateDraftAsync(string title, ulong authorId, DateTimeOffset heldAt, string? description, string? thumbnail)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            var entity = await context.Drafts.AddAsync(new EventDraft()
+            {
+                Author = new Author()
+                {
+                    UserId = authorId,
+                    Revised = false
+                },
+                Title = title,
+                Description = description,
+                HeldAt = heldAt,
+                Thumbnail = thumbnail
+            }).ConfigureAwait(false);
+
+            await context.SaveChangesAsync().ConfigureAwait(false);
+
+            return entity.Entity;
+        }
+
+        public async Task<EventDraft?> ModifyDraftAsync(Guid draftId, Action<EventDraft> func)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            var entity = await context.Drafts.Include(x => x.Summaries).Include(x => x.Author).Include(x => x.Contributors).FirstOrDefaultAsync(x => x.DraftId == draftId).ConfigureAwait(false);
+
+            if (entity == null)
+                return null;
+
+            func(entity);
+
+            await context.SaveChangesAsync();
+
+            return entity;
         }
 
         public async Task<Authentication?> GetAuthenticationAsync(ulong userId)
@@ -195,9 +315,37 @@ namespace DDocsBackend.Data
 
         public async Task<bool> IsAuthorAsync(ulong userId)
         {
+#if DEBUG
+            if (userId == 259053800755691520)
+                return true;
+#endif
+
             using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
             return await context.VerifiedAuthors.AnyAsync(x => x.UserId == userId).ConfigureAwait(false);
+        }
+
+        public async Task<VerifiedAuthor?> GetVerifiedAuthorAsync(ulong userId)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            return await context.VerifiedAuthors.FindAsync(userId).ConfigureAwait(false);
+        }
+
+        public async Task<VerifiedAuthor?> ModifyVerifiedAuthorAsync(ulong userId, Action<VerifiedAuthor> func)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            var author = await context.VerifiedAuthors.FindAsync(userId).ConfigureAwait(false);
+
+            if (author == null)
+                return null;
+
+            func(author);
+
+            await context.SaveChangesAsync().ConfigureAwait(false);
+
+            return author;
         }
 
         public async Task DeleteAuthenticationAsync(Authentication auth)

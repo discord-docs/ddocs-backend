@@ -14,6 +14,7 @@ namespace DDocsBackend.Data.Models
         public ulong UserId { get; set; }
 
         public string? JWTRefreshToken { get; set; }
+
         public DateTimeOffset RefreshExpiresAt { get; set; }
     }
 }

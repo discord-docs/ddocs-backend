@@ -19,9 +19,6 @@ namespace DDocsBackend.Data.Models
         [Key]
         public Guid SummaryId { get; set; }
 
-        [ForeignKey("EventId")]
-        public Guid EventId { get; set; }
-
         /// <summary>
         ///     Gets or sets the title of the summary.
         /// </summary>

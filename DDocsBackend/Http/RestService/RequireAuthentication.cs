@@ -13,5 +13,13 @@ namespace DDocsBackend
     ///     The function wont execute without the valid authentication.
     /// </remarks>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public class RequireAuthentication : Attribute { }
+    public class RequireAuthentication : Attribute 
+    {
+        public bool RequireAuthor { get; set; }
+
+        public RequireAuthentication(bool requireAuthor = false)
+        {
+            RequireAuthor = requireAuthor;
+        }
+    }
 }

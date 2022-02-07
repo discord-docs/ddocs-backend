@@ -37,6 +37,30 @@ namespace DDocsBackend.Data.Migrations
                     b.ToTable("AuthorEvent");
                 });
 
+            modelBuilder.Entity("DDocsBackend.Data.Models.Asset", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<byte>("ContentType")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ThumbnailId")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ThumbnailId");
+
+                    b.ToTable("Assets");
+                });
+
             modelBuilder.Entity("DDocsBackend.Data.Models.Authentication", b =>
                 {
                     b.Property<decimal>("UserId")
@@ -60,6 +84,9 @@ namespace DDocsBackend.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("EventDraftDraftId")
+                        .HasColumnType("uuid");
+
                     b.Property<bool>("Revised")
                         .HasColumnType("boolean");
 
@@ -67,6 +94,8 @@ namespace DDocsBackend.Data.Migrations
                         .HasColumnType("numeric(20,0)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("EventDraftDraftId");
 
                     b.ToTable("Authors");
                 });
@@ -89,6 +118,23 @@ namespace DDocsBackend.Data.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("DiscordAuthentication");
+                });
+
+            modelBuilder.Entity("DDocsBackend.Data.Models.DiscordUserPfp", b =>
+                {
+                    b.Property<decimal>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<string>("AssetId")
+                        .HasColumnType("text");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("AssetId")
+                        .IsUnique();
+
+                    b.ToTable("UserProfiles");
                 });
 
             modelBuilder.Entity("DDocsBackend.Data.Models.Event", b =>
@@ -117,6 +163,34 @@ namespace DDocsBackend.Data.Migrations
                     b.ToTable("Events");
                 });
 
+            modelBuilder.Entity("DDocsBackend.Data.Models.EventDraft", b =>
+                {
+                    b.Property<Guid>("DraftId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AuthorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("HeldAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Thumbnail")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text");
+
+                    b.HasKey("DraftId");
+
+                    b.HasIndex("AuthorId");
+
+                    b.ToTable("Drafts");
+                });
+
             modelBuilder.Entity("DDocsBackend.Data.Models.Summary", b =>
                 {
                     b.Property<Guid>("SummaryId")
@@ -126,7 +200,10 @@ namespace DDocsBackend.Data.Migrations
                     b.Property<string>("Content")
                         .HasColumnType("text");
 
-                    b.Property<Guid>("EventId")
+                    b.Property<Guid?>("EventDraftDraftId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("EventId")
                         .HasColumnType("uuid");
 
                     b.Property<bool>("IsNew")
@@ -149,16 +226,27 @@ namespace DDocsBackend.Data.Migrations
 
                     b.HasKey("SummaryId");
 
+                    b.HasIndex("EventDraftDraftId");
+
                     b.HasIndex("EventId");
 
                     b.ToTable("Summaries");
                 });
 
-            modelBuilder.Entity("DDocsBackend.Data.Models.VerifiedAuthors", b =>
+            modelBuilder.Entity("DDocsBackend.Data.Models.VerifiedAuthor", b =>
                 {
                     b.Property<decimal>("UserId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("numeric(20,0)");
+
+                    b.Property<string>("AvatarId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Discriminator")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Username")
+                        .HasColumnType("text");
 
                     b.HasKey("UserId");
 
@@ -180,17 +268,60 @@ namespace DDocsBackend.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("DDocsBackend.Data.Models.Asset", b =>
+                {
+                    b.HasOne("DDocsBackend.Data.Models.Asset", "Thumbnail")
+                        .WithMany()
+                        .HasForeignKey("ThumbnailId");
+
+                    b.Navigation("Thumbnail");
+                });
+
+            modelBuilder.Entity("DDocsBackend.Data.Models.Author", b =>
+                {
+                    b.HasOne("DDocsBackend.Data.Models.EventDraft", null)
+                        .WithMany("Contributors")
+                        .HasForeignKey("EventDraftDraftId");
+                });
+
+            modelBuilder.Entity("DDocsBackend.Data.Models.DiscordUserPfp", b =>
+                {
+                    b.HasOne("DDocsBackend.Data.Models.Asset", "Asset")
+                        .WithOne()
+                        .HasForeignKey("DDocsBackend.Data.Models.DiscordUserPfp", "AssetId");
+
+                    b.Navigation("Asset");
+                });
+
+            modelBuilder.Entity("DDocsBackend.Data.Models.EventDraft", b =>
+                {
+                    b.HasOne("DDocsBackend.Data.Models.Author", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId");
+
+                    b.Navigation("Author");
+                });
+
             modelBuilder.Entity("DDocsBackend.Data.Models.Summary", b =>
                 {
+                    b.HasOne("DDocsBackend.Data.Models.EventDraft", null)
+                        .WithMany("Summaries")
+                        .HasForeignKey("EventDraftDraftId");
+
                     b.HasOne("DDocsBackend.Data.Models.Event", null)
                         .WithMany("Summaries")
-                        .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("EventId");
                 });
 
             modelBuilder.Entity("DDocsBackend.Data.Models.Event", b =>
                 {
+                    b.Navigation("Summaries");
+                });
+
+            modelBuilder.Entity("DDocsBackend.Data.Models.EventDraft", b =>
+                {
+                    b.Navigation("Contributors");
+
                     b.Navigation("Summaries");
                 });
 #pragma warning restore 612, 618

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.31903.286
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDocsBackend", "DDocsBackend\DDocsBackend.csproj", "{33AC45D7-E1F0-4F42-8CCD-DACE1503E0A0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DDocsBackend", "DDocsBackend\DDocsBackend.csproj", "{33AC45D7-E1F0-4F42-8CCD-DACE1503E0A0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DDocsBackend.Data", "DDocsBackend.Database\DDocsBackend.Data.csproj", "{9A5CA9F0-5A53-4BAB-B86A-E0649B4BB0DD}"
 EndProject
