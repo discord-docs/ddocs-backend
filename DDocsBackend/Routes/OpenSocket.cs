@@ -15,7 +15,7 @@ namespace DDocsBackend.Routes
                 return RestResult.BadRequest;
 
             var result = await WebsocketServer.TryAcceptSocketAsync(Context).ConfigureAwait(false);
-            return RestResult.NoAction;
+            return RestResult.NoAction.WithCode(result ? 200 : 400);
         }
     }
 }

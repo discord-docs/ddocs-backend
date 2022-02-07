@@ -41,8 +41,6 @@ namespace DDocsBackend.Routes.CDN
                 Response.Close();
             }
 
-            (Response as IDisposable).Dispose();
-
             return RestResult.NoAction;
         }
     }

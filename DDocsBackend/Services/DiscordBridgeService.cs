@@ -29,6 +29,7 @@ namespace DDocsBackend.Services
         private readonly string _token;
         private readonly DiscordRestClient _botClient;
         private readonly CDNService _cdn;
+        private readonly SemaphoreSlim _lock;
 
         public DiscordBridgeService(CDNService cdn, AuthenticationService authService, DiscordOAuthHelper oauthHelper, DataAccessLayer dataAccessLayer, IConfiguration config)
         {
@@ -39,6 +40,7 @@ namespace DDocsBackend.Services
             _cache = MemoryCache.Default;
             _botClient = new();
             _cdn = cdn;
+            _lock = new SemaphoreSlim(1, 1);
         }
 
         public async Task<UserDetails> GetUserDetailsAsync(ulong id)
@@ -165,10 +167,14 @@ namespace DDocsBackend.Services
             if (cached != null)
                 return cached as IUser;
 
+            await _lock.WaitAsync().ConfigureAwait(false);
+
             if (_botClient.LoginState != LoginState.LoggedIn)
                 await _botClient.LoginAsync(TokenType.Bot, _token);
 
             var user = await _botClient.GetUserAsync(id);
+
+            _lock.Release();
 
             if (user == null)
             {

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Reflection;
 using System.Text;
@@ -8,9 +9,9 @@ namespace DDocsBackend;
 
 internal class HttpRestHandler
 {
-    private LinkedList<RestModuleBase?> CachedModules { get; } = new();
-    private int cacheSize = 15;
-    private List<RestModuleInfo> Modules { get; } = new();
+    public const int CacheSize = 32;
+
+    private readonly List<RestModuleInfo> _modules = new();
 
     private readonly HttpServer _server;
     private readonly Logger _log;
@@ -24,7 +25,7 @@ internal class HttpRestHandler
         _log.Info("Creating Rest handler...", Severity.Rest);
         this._server = server;
         LoadRoutes();
-        _log.Info($"Rest handler {Logger.BuildColoredString("Online", ConsoleColor.Green)}! Loaded {Modules.Count} Modules with {Modules.Select(x => x.Routes.Count).Sum()} routes!", Severity.Rest);
+        _log.Info($"Rest handler {Logger.BuildColoredString("Online", ConsoleColor.Green)}! Loaded {_modules.Count} Modules with {_modules.Select(x => x.Routes.Count).Sum()} routes!", Severity.Rest);
     }
 
     private void LoadRoutes()
@@ -33,7 +34,7 @@ internal class HttpRestHandler
 
         foreach (var module in modules)
         {
-            this.Modules.Add(new RestModuleInfo(module, _server.Provider));
+            this._modules.Add(new RestModuleInfo(module, _server.Provider));
         }
     }
 
@@ -42,14 +43,7 @@ internal class HttpRestHandler
         Module = null;
         Info = null;
 
-        if ((Module = CachedModules.ToArray().FirstOrDefault(x => x != null && (x.ModuleInfo?.HasRoute(request) ?? false))) != null)
-        {
-            Info = Module.ModuleInfo;
-            BumpOrEnqueueModule(Module);
-            return true;
-        }
-
-        var modInfo = Modules.FirstOrDefault(x => x != null && x.HasRoute(request));
+        var modInfo = _modules.FirstOrDefault(x => x != null && x.HasRoute(request));
 
         if (modInfo == null)
             return false;
@@ -62,33 +56,7 @@ internal class HttpRestHandler
             return false;
         }
         Info = modInfo;
-        BumpOrEnqueueModule(Module);
         return true;
-    }
-
-    private void BumpOrEnqueueModule(RestModuleBase baseModule)
-    {
-        if (baseModule == null)
-        {
-            _log.Critical("Module null", Severity.Rest);
-            return;
-        }
-
-        if (CachedModules.ToArray().Any(x => x != null && x.Equals(baseModule)))
-        {
-            CachedModules.Remove(baseModule);
-        }
-        CachedModules.AddFirst(baseModule);
-
-        if (CachedModules.Count > cacheSize)
-            CachedModules.RemoveLast();
-
-        if (CachedModules.Any(x => x == null))
-        {
-            _log.Warn($"{Logger.BuildColoredString("Found null in cache, removing", ConsoleColor.Red)}", Severity.Rest);
-
-            CachedModules.Remove((RestModuleBase?)null);
-        }
     }
 
     public async Task<int> ProcessRestRequestAsync(HttpListenerContext context)
@@ -155,7 +123,6 @@ internal class HttpRestHandler
         {
             if (result.Code == int.MaxValue)
             {
-                CachedModules.Remove(moduleBase);
                 return -1;
             }
 

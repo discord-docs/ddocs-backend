@@ -121,6 +121,7 @@ namespace DDocsBackend.Http.Websocket
 
         private async Task HandlePacketAsync(Packet p)
         {
+            _log.Debug($"Got op {p.Type} from {UserId}", Severity.Socket);
             switch (p.Type)
             {
                 case PacketType.Heartbeat:
@@ -139,6 +140,8 @@ namespace DDocsBackend.Http.Websocket
                             return;
 
                         CurrentPage = payload.Page;
+
+                        _log.Info($"{UserId} is now on {CurrentPage}", Severity.Socket);
                     }
                     break;
                 case PacketType.GetUsers:
@@ -208,7 +211,7 @@ namespace DDocsBackend.Http.Websocket
                     packet.AddRange(buff.Take(result.Count));
                 }
             }
-            catch (Exception x) when (x.GetType() != typeof(OperationCanceledException))
+            catch (Exception x) when (x.GetType() != typeof(OperationCanceledException) || x.GetType() != typeof(TaskCanceledException))
             {
                 _log.Error("Failed to read from socket", Severity.Socket, x);
                 return null;
