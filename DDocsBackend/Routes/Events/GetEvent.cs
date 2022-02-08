@@ -35,7 +35,7 @@ namespace DDocsBackend.Routes.Events
                 Summaries = evnt.Summaries!.Select(x => x.ToRestModel()),
                 Title = evnt.Title,
                 Thumbnail = evnt.Thumbnail,
-                LastRevised = evnt.Summaries!.Max(x => x.LastRevised)
+                LastRevised = (evnt.Summaries?.Any() ?? false) ? evnt.Summaries!.Max(x => x.LastRevised) : evnt.HeldAt
             });
         }
     }

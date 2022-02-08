@@ -37,6 +37,7 @@ namespace DDocsBackend
             };
         }
 
+
         public static EventSummary ToRestModel(this Data.Models.Summary summary)
         {
             return new EventSummary

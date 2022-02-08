@@ -1,4 +1,5 @@
-﻿using DDocsBackend.Data;
+﻿using DDocsBackend.Converters;
+using DDocsBackend.Data;
 using DDocsBackend.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
@@ -16,10 +17,7 @@ namespace DDocsBackend.Http.Websocket
     {
         public const EventTypes RestrictedType =
             EventTypes.DraftCreated |
-            EventTypes.DraftModified |
-            EventTypes.SummaryCreated |
-            EventTypes.SummaryDeleted |
-            EventTypes.SummaryModifed;
+            EventTypes.DraftModified;
 
         public const int IdentityTimeout = 5000;
         public const int MaxPacketSize = 2048;
@@ -33,6 +31,11 @@ namespace DDocsBackend.Http.Websocket
             => Server.Provider.GetRequiredService<AuthenticationService>();
         private DataAccessLayer _dataAccessLayer
             => Server.Provider.GetRequiredService<DataAccessLayer>();
+
+        private JsonSerializer _serializer = new JsonSerializer()
+        {
+            ContractResolver = new DDocsContractResolver()
+        };
 
         public WebsocketServer(HttpServer server)
         {
@@ -161,7 +164,11 @@ namespace DDocsBackend.Http.Websocket
 
             var json = Encoding.UTF8.GetString(result.Value.Data.ToArray());
 
-            return JsonConvert.DeserializeObject<Packet?>(json);
+            using(var stringReader = new StringReader(json))
+            using (var reader = new JsonTextReader(stringReader))
+            {
+                return _serializer.Deserialize<Packet?>(reader);
+            }
         }
 
         private async Task<(WebSocketReceiveResult? Result, List<byte> Data)?> GetPacketAsync(WebSocket socket, CancellationToken token = default)

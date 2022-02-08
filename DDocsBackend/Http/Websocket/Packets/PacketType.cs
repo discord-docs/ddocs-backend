@@ -16,5 +16,6 @@ namespace DDocsBackend.Http.Websocket
         Event,
         GetUsers,
         Users,
+        UpdateIntents,
     }
 }

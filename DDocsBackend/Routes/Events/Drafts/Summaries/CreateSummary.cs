@@ -46,7 +46,11 @@ namespace DDocsBackend.Routes.Events.Drafts.Summaries
             if (draft == null)
                 return RestResult.NotFound;
 
-            return RestResult.OK.WithData(await draft.ToRestModelAsync(this).ConfigureAwait(false));
+            var model = await draft.ToRestModelAsync(this).ConfigureAwait(false);
+
+            WebsocketServer.DispatchEvent(EventTypes.DraftModified, model);
+
+            return RestResult.OK.WithData(model);
         }
     }
 }

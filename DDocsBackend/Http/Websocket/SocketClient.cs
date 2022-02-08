@@ -1,4 +1,5 @@
-﻿using DDocsBackend.Data.Models;
+﻿using DDocsBackend.Converters;
+using DDocsBackend.Data.Models;
 using DDocsBackend.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
@@ -41,6 +42,10 @@ namespace DDocsBackend.Http.Websocket
         private CancellationTokenSource _cancelToken;
         private TaskCompletionSource _heartbeatReceived = new();
         private readonly WebsocketServer _server;
+        private readonly JsonSerializer _serializer = new JsonSerializer
+        {
+            ContractResolver = new DDocsContractResolver()
+        };
 
         public SocketClient(Authentication auth, Identity identity, WebSocket socket, WebsocketServer server)
         {
@@ -61,7 +66,12 @@ namespace DDocsBackend.Http.Websocket
         public async Task SendAsync(Packet packet)
         {
             // encode
-            var bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(packet));
+            byte[]? bytes = null;
+            using (var writer = new StringWriter())
+            {
+                _serializer.Serialize(writer, packet);
+                bytes = Encoding.UTF8.GetBytes(writer.ToString());
+            }
 
             // send it away
             await _socket.SendAsync(bytes, WebSocketMessageType.Text, true, _cancelToken.Token).ConfigureAwait(false);
@@ -93,7 +103,11 @@ namespace DDocsBackend.Http.Websocket
                     {
                         string json = Encoding.UTF8.GetString(result.Value.Data.ToArray());
 
-                        packet = JsonConvert.DeserializeObject<Packet>(json);
+                        using (var stringReader = new StringReader(json))
+                        using (var reader = new JsonTextReader(stringReader))
+                        {
+                            packet = JsonConvert.DeserializeObject<Packet?>(json);
+                        }
                     }
                     catch (Exception x)
                     {
@@ -146,18 +160,47 @@ namespace DDocsBackend.Http.Websocket
                     break;
                 case PacketType.GetUsers:
                     {
-                        var otherUsers = _server.ConnectedClients.Where(x => x.UserId != UserId && x.CurrentPage == CurrentPage);
+                        var payload = p.PayloadAs<GetUsers>();
+                        var requestAll = (payload != null && payload.All.IsSpecified);
+
+                        var otherUsers = requestAll
+                            ? _server.ConnectedClients
+                            : _server.ConnectedClients.Where(x => x != null && x.UserId != UserId && x.CurrentPage == CurrentPage);
 
                         await SendAsync(new Packet
                         {
                             Type = PacketType.Users,
                             Payload = new UsersResult
                             {
-                                Users = await Task.WhenAll(otherUsers.Select(x => x.ToAuthorAsync())).ConfigureAwait(false)
+                                Users = requestAll ? 
+                                   await Task.WhenAll(otherUsers.Where(x => x != null).Select(x =>
+                                   {
+                                       return x.ToAuthorAsync().ContinueWith(y =>
+                                       {
+                                           return new ExtendedAuthor(x.CurrentPage, y.Result);
+                                       });
+                                   }))
+                                : (await Task.WhenAll(otherUsers.Select(x => x.ToAuthorAsync())).ConfigureAwait(false)).Select(x => new ExtendedAuthor(x)).ToArray()
                             }
                         });
                     }
                     break;
+                case PacketType.UpdateIntents:
+                    {
+                        var payload = p.PayloadAs<UpdateIntents>();
+
+                        if(payload == null)
+                        {
+                            await DisconnectAsync(WebSocketCloseStatus.ProtocolError, "Invalid payload");
+                            return;
+                        }
+
+                        Events = payload.Types;
+
+                        _log.Info($"Client {UserId} is now listening to {Events}");
+                    }
+                    break;
+
                 default:
                     InvokePayloadListeners(p);
                     break;

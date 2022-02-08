@@ -11,6 +11,6 @@ namespace DDocsBackend.Http.Websocket
     internal class UsersResult
     {
         [JsonProperty("users")]
-        public Author[]? Users { get; set; }
+        public ExtendedAuthor[]? Users { get; set; }
     }
 }

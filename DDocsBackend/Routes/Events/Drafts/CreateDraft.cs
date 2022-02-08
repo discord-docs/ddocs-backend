@@ -23,7 +23,11 @@ namespace DDocsBackend.Routes.Events.Drafts
 
             var draft = await DataAccessLayer.CreateDraftAsync(body.Title!, Authentication!.UserId, body.HeldAt, body.Description, body.Thumbnail);
 
-            return RestResult.OK.WithData(await draft.ToRestModelAsync(this).ConfigureAwait(false));
+            var model = await draft.ToRestModelAsync(this).ConfigureAwait(false);
+
+            WebsocketServer.DispatchEvent(EventTypes.DraftCreated, model);
+
+            return RestResult.OK.WithData(model);
         }
     }
 }

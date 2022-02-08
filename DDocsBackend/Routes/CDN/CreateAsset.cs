@@ -1,5 +1,7 @@
 ﻿using DDocsBackend.Helpers;
+using DDocsBackend.RestModels;
 using HttpMultipartParser;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +26,15 @@ namespace DDocsBackend.Routes.CDN
             if (fileContent == null)
                 return RestResult.BadRequest;
 
-            var processed = await ImageHelper.ProcessUserImageAsync(this, fileContent.Data).ConfigureAwait(false);
+            CropBody? cropBody = null;
+
+            if (body.HasParameter("crop"))
+            {
+                var json = body.GetParameterValue("crop");
+                cropBody = JsonConvert.DeserializeObject<CropBody>(json);
+            }
+
+            var processed = await ImageHelper.ProcessUserImageAsync(this, fileContent.Data, cropBody).ConfigureAwait(false);
 
             return RestResult.OK.WithData(new
             {

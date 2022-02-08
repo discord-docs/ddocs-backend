@@ -1,4 +1,5 @@
 ﻿using DDocsBackend.Data.Models;
+using DDocsBackend.RestModels;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Processing;
@@ -12,12 +13,17 @@ namespace DDocsBackend.Helpers
 {
     public class ImageHelper
     {
-        public static async Task<ProcessedImage> ProcessUserImageAsync(RestModuleBase context, Stream imageContent)
+        public static async Task<ProcessedImage> ProcessUserImageAsync(RestModuleBase context, Stream imageContent, CropBody? body = null)
         {
             using (var image = Image.Load(imageContent, out var format))
             {
                 // create the asset 
                 var contentType = GetContentType(format);
+
+                if(body != null)
+                {
+                    image.Mutate(i => i.Crop(new Rectangle(body.X, body.Y, body.CropWidth, body.CropHeight)));
+                }
 
                 var mainAsset = await context.DataAccessLayer.CreateAssetAsync(AssetType.Content, contentType, AssetType.Thumbnail, contentType);
                 await context.CDNService.WriteAsync(mainAsset.Id!, AssetType.Content, contentType, image);
