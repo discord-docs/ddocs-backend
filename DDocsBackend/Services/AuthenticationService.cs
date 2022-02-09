@@ -67,9 +67,10 @@ namespace DDocsBackend.Services
                 JWTRefreshToken = "testing",
                 RefreshExpiresAt = DateTime.UtcNow.AddDays(1)
             };
-#pragma warning disable CS0162 // Unreachable code detected
 
 #endif
+#pragma warning disable CS0162 // Unreachable code detected
+
 
             var decoded = Decode<JWTPayload?>(jwt);
 #pragma warning restore CS0162 // Unreachable code detected

@@ -55,7 +55,7 @@ internal class HttpRestHandler
 
         var route = modInfo.GetRoute(request);
 
-        Module = (RestModuleBase?)_cache.Get(route!.RouteName);
+        Module = (RestModuleBase?)_cache.Get($"{route!.RouteMethod}{route.RouteName}");
 
         if (Module != null)
             return true;
@@ -72,7 +72,7 @@ internal class HttpRestHandler
 
     private void CacheModule(RestModuleBase module, RestMethodInfo route)
     {
-        _cache.Set(route.RouteName, module, DateTimeOffset.UtcNow.AddHours(1));
+        _cache.Set($"{route.RouteMethod}{route.RouteName}", module, DateTimeOffset.UtcNow.AddHours(1));
 
     }
 

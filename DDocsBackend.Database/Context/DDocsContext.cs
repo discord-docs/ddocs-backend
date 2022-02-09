@@ -24,6 +24,8 @@ namespace DDocsBackend.Data.Context
         public DbSet<Asset> Assets { get; set; }
         public DbSet<DiscordUserPfp> UserProfiles { get; set; }
         public DbSet<Admin> Admins { get; set; }
+        
+        public DbSet<SiteContributor> SiteContributors { get; set; }
 
         private readonly Logger _log;
 
@@ -45,6 +47,11 @@ namespace DDocsBackend.Data.Context
                 .HasOne<Asset>(s => s.Asset)
                 .WithOne()
                 .HasForeignKey<DiscordUserPfp>(ad => ad.AssetId);
+
+            modelBuilder.Entity<SiteContributor>()
+                .HasOne<Asset>(s => s.ProfilePicture)
+                .WithOne()
+                .HasForeignKey<SiteContributor>(x => x.ProfilePictureId);
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

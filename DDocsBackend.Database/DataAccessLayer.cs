@@ -18,6 +18,31 @@ namespace DDocsBackend.Data
             _contextFactory = contextFactory;
         }
 
+        public async Task<SiteContributor> CreateContributorAsync(ulong userId, string username, string discriminator,
+            Asset avatar)
+        {
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            var result = await context.SiteContributors.AddAsync(new SiteContributor()
+            {
+                UserId = userId,
+                Username = username,
+                Discriminator = discriminator,
+                ProfilePictureId = avatar.Id
+            });
+
+            await context.SaveChangesAsync().ConfigureAwait(false);
+            
+            return result.Entity;
+        }
+        
+        public async Task<SiteContributor[]> GetContributorsAsync()
+        {
+            await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            return await context.SiteContributors.Include(x => x.ProfilePicture).ToArrayAsync();
+        }
+        
         public async Task<bool> IsAdminAsync(ulong id)
         {
             using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);

@@ -13,10 +13,7 @@ namespace DDocsBackend.Routes.Authentication
 
         [Route("/auth/refresh", "GET")]
         public async Task<RestResult> ExecuteAsync()
-        {            
-            if (Authentication != null)
-                return RestResult.BadRequest;
-
+        {   
             var refreshToken = Request.Cookies["r_"];
 
             if (refreshToken == null)
