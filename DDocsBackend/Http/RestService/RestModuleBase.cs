@@ -1,6 +1,7 @@
 ﻿using DDocsBackend.Data;
 using DDocsBackend.Data.Models;
 using DDocsBackend.Helpers;
+using DDocsBackend.Http;
 using DDocsBackend.Http.Websocket;
 using DDocsBackend.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,7 +29,7 @@ public class RestModuleBase
     public DiscordOAuthHelper DiscordOAuthHelper
         => RestServer!.Provider.GetRequiredService<DiscordOAuthHelper>();
 
-    public Authentication? Authentication { get; set; }
+    public IAuthentication? Authentication { get; set; }
 
     public JsonSerializer Serializer
         => RestServer!.Provider.GetRequiredService<JsonSerializer>();

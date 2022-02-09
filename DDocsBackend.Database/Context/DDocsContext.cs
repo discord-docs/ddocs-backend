@@ -23,6 +23,7 @@ namespace DDocsBackend.Data.Context
         public DbSet<EventDraft> Drafts { get; set; }
         public DbSet<Asset> Assets { get; set; }
         public DbSet<DiscordUserPfp> UserProfiles { get; set; }
+        public DbSet<Admin> Admins { get; set; }
 
         private readonly Logger _log;
 

@@ -135,7 +135,7 @@ namespace DDocsBackend.Http.Websocket
 
         private async Task HandlePacketAsync(Packet p)
         {
-            _log.Debug($"Got op {p.Type} from {UserId}", Severity.Socket);
+            _log.Debug($"Got {p.Type} from {UserId}", Severity.Socket);
             switch (p.Type)
             {
                 case PacketType.Heartbeat:

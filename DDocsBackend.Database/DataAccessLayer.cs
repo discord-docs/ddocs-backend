@@ -18,6 +18,27 @@ namespace DDocsBackend.Data
             _contextFactory = contextFactory;
         }
 
+        public async Task<bool> IsAdminAsync(ulong id)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            return await context.Admins.AnyAsync(x => x.UserId == id).ConfigureAwait(false);
+        }
+
+        public async Task<Admin?> GetAdminAsync(ulong id)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            return await context.Admins.FindAsync(id).ConfigureAwait(false);
+        }
+
+        public async Task<Admin?> GetAdminAsync(string credentials)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            return await context.Admins.FirstOrDefaultAsync(x => x.HashCredentials == credentials).ConfigureAwait(false);
+        }
+
         public async Task<DiscordUserPfp?> GetUserPfp(ulong id)
         {
             using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
@@ -346,6 +367,25 @@ namespace DDocsBackend.Data
             await context.SaveChangesAsync().ConfigureAwait(false);
 
             return author;
+        }
+
+        public async Task DeleteAuthenticationAsync(ulong id)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+
+            var auth = await context.Authentication.FindAsync(id).ConfigureAwait(false);
+
+            if (auth == null)
+                return;
+
+            context.Authentication.Remove(auth);
+
+            var discordAuth = await context.DiscordAuthentication.FindAsync(auth.UserId).ConfigureAwait(false);
+
+            if (discordAuth != null)
+                context.DiscordAuthentication.Remove(discordAuth);
+
+            await context.SaveChangesAsync().ConfigureAwait(false);
         }
 
         public async Task DeleteAuthenticationAsync(Authentication auth)

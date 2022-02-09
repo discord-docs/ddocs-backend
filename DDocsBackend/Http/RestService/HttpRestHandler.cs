@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Reflection;
+using System.Runtime.Caching;
 using System.Text;
 
 namespace DDocsBackend;
@@ -16,6 +17,7 @@ internal class HttpRestHandler
     private readonly HttpServer _server;
     private readonly Logger _log;
     private readonly JsonSerializer _serializer;
+    private readonly MemoryCache _cache;
 
     public HttpRestHandler(HttpServer server)
     {
@@ -26,6 +28,7 @@ internal class HttpRestHandler
         this._server = server;
         LoadRoutes();
         _log.Info($"Rest handler {Logger.BuildColoredString("Online", ConsoleColor.Green)}! Loaded {_modules.Count} Modules with {_modules.Select(x => x.Routes.Count).Sum()} routes!", Severity.Rest);
+        _cache = new MemoryCache("modules");
     }
 
     private void LoadRoutes()
@@ -48,6 +51,15 @@ internal class HttpRestHandler
         if (modInfo == null)
             return false;
 
+        Info = modInfo;
+
+        var route = modInfo.GetRoute(request);
+
+        Module = (RestModuleBase?)_cache.Get(route!.RouteName);
+
+        if (Module != null)
+            return true;
+
         Module = modInfo.GetInstance();
 
         if (Module == null)
@@ -55,8 +67,13 @@ internal class HttpRestHandler
             _log.Warn($"Got null instance: {modInfo}", Severity.Rest);
             return false;
         }
-        Info = modInfo;
         return true;
+    }
+
+    private void CacheModule(RestModuleBase module, RestMethodInfo route)
+    {
+        _cache.Set(route.RouteName, module, DateTimeOffset.UtcNow.AddHours(1));
+
     }
 
     public async Task<int> ProcessRestRequestAsync(HttpListenerContext context)
@@ -146,6 +163,7 @@ internal class HttpRestHandler
             }
 
             context.Response.Close();
+            CacheModule(module, route);
             return result.Code;
         }
     }

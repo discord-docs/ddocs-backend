@@ -12,7 +12,7 @@ namespace DDocsBackend.Routes.Authentication
         [RequireAuthentication]
         public async Task<RestResult> ExecuteAsync()
         {
-            await DataAccessLayer.DeleteAuthenticationAsync(Authentication!).ConfigureAwait(false);
+            await DataAccessLayer.DeleteAuthenticationAsync(Authentication!.UserId).ConfigureAwait(false);
             ClearRefreshCookie();
             return RestResult.OK;
         }

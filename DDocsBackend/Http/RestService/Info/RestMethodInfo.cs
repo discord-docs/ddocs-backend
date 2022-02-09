@@ -1,4 +1,5 @@
-﻿using DDocsBackend.Services;
+﻿using DDocsBackend.Http;
+using DDocsBackend.Services;
 using JWT.Exceptions;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
@@ -30,6 +31,7 @@ internal class RestMethodInfo
     private readonly Dictionary<(int index, string name), Type> _parameters = new();
     private readonly Logger _log;
     private readonly RequireAuthentication? _requirePermissions;
+    private readonly RequireAdmin? _requireAdmin;
     private readonly IServiceProvider _provider;
     /// <summary>
     ///     Creates a new instance of <see cref="RestMethodInfo"/>.
@@ -55,6 +57,7 @@ internal class RestMethodInfo
         }
 
         _requirePermissions = info.GetCustomAttribute<RequireAuthentication>();
+        _requireAdmin = info.GetCustomAttribute<RequireAdmin>();
         _provider = provider;
     }
     
@@ -138,52 +141,40 @@ internal class RestMethodInfo
     public async Task<RestResult> ExecuteAsync(RestModuleBase? instance, params object[] parameters)
         => await RunPreconditionsAsync(instance!) ?? await((Task<RestResult>?)this._info.Invoke(instance, parameters)!).ConfigureAwait(false);
 
+#pragma warning disable CS0162 // Unreachable code detected
     private async Task PopulateAuthenticationAsync(RestModuleBase instance)
     {
-        var authService = _provider.GetRequiredService<AuthenticationService>();
-
-        // check the header
-        var jwt = instance.Request.Headers["Authorization"];
-
-        if (string.IsNullOrEmpty(jwt))
-            return;
-
-        jwt = jwt.Replace("Bearer ", "");
-
 #if DEBUG
-
-        if (jwt == "testing")
+        instance.Authentication = new AdministatorAuthentication()
         {
-            instance.Authentication = new()
-            {
-                UserId = 259053800755691520,
-                RefreshExpiresAt = DateTime.UtcNow.AddDays(1),
-                JWTRefreshToken = "testing"
-            };
-            return;
-        }
+            UserId = 259053800755691520,
+            IsAdmin = true,
+            IsAuthor = true
+        };
+        return;
 #endif
 
         try
         {
-            var auth = await authService.GetAuthenticationAsync(jwt);
+            var auth = instance.Request.Headers["Authorization"];
 
-            if (auth == null)
+            if (string.IsNullOrEmpty(auth))
                 return;
 
-            instance.Authentication = auth;
+            instance.Authentication = await AuthenticationResolver.ResolveAsync(auth, _provider).ConfigureAwait(false);
         }
         catch(Exception x) 
         {
             Logger.GetLogger<RestMethodInfo>().Warn("Failed to get auth", exception: x);
         }
     }
+#pragma warning restore CS0162 // Unreachable code detected
 
     private async Task<RestResult?> RunPreconditionsAsync(RestModuleBase instance)
     {
         await PopulateAuthenticationAsync(instance);
 
-        if (_requirePermissions != null && instance.Authentication == null)
+        if ((_requirePermissions != null || _requireAdmin != null) && instance.Authentication == null)
         {
             return RestResult.Unauthorized.WithData(new {reason = "Invalid authorization"});
         }
@@ -191,9 +182,14 @@ internal class RestMethodInfo
         if(_requirePermissions != null && 
             instance.Authentication != null && 
             _requirePermissions.RequireAuthor && 
-            !await instance.DataAccessLayer.IsAuthorAsync(instance.Authentication.UserId))
+            !instance.Authentication.IsAuthor)
         {
             return RestResult.Forbidden.WithData(new { reason = "Why are you here? This should not be what you seek young padawan." });
+        }
+
+        if(_requireAdmin != null && (instance.Authentication == null || !instance.Authentication.IsAdmin))
+        {
+            return RestResult.Forbidden.WithData(new { reason = "This path requires the mighty, please check again once you show your worth to the TOME of YONE" });
         }
 
         return null;

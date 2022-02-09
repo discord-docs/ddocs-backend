@@ -22,4 +22,6 @@ namespace DDocsBackend
             RequireAuthor = requireAuthor;
         }
     }
+
+    public class RequireAdmin : Attribute { }
 }
