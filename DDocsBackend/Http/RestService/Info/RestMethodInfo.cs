@@ -60,7 +60,7 @@ internal class RestMethodInfo
         _requireAdmin = info.GetCustomAttribute<RequireAdmin>();
         _provider = provider;
     }
-    
+
     /// <summary>
     ///     Determines if a provided route and method is a match to this method.
     /// </summary>
@@ -72,7 +72,7 @@ internal class RestMethodInfo
             return Regex.IsMatch(route, _route.Name);
         else return (_routeParamRegex?.IsMatch(route) ?? false) && method == RouteMethod;
     }
-    
+
     /// <summary>
     ///     Gets all of the parameters' converted objects in the given route.
     /// </summary>
@@ -144,16 +144,6 @@ internal class RestMethodInfo
 #pragma warning disable CS0162 // Unreachable code detected
     private async Task PopulateAuthenticationAsync(RestModuleBase instance)
     {
-#if DEBUG
-        instance.Authentication = new AdministatorAuthentication()
-        {
-            UserId = 259053800755691520,
-            IsAdmin = true,
-            IsAuthor = true
-        };
-        return;
-#endif
-
         try
         {
             var auth = instance.Request.Headers["Authorization"];
@@ -163,7 +153,7 @@ internal class RestMethodInfo
 
             instance.Authentication = await AuthenticationResolver.ResolveAsync(auth, _provider).ConfigureAwait(false);
         }
-        catch(Exception x) 
+        catch(Exception x)
         {
             Logger.GetLogger<RestMethodInfo>().Warn("Failed to get auth", exception: x);
         }
@@ -179,9 +169,9 @@ internal class RestMethodInfo
             return RestResult.Unauthorized.WithData(new {reason = "Invalid authorization"});
         }
 
-        if(_requirePermissions != null && 
-            instance.Authentication != null && 
-            _requirePermissions.RequireAuthor && 
+        if(_requirePermissions != null &&
+            instance.Authentication != null &&
+            _requirePermissions.RequireAuthor &&
             !instance.Authentication.IsAuthor)
         {
             return RestResult.Forbidden.WithData(new { reason = "Why are you here? This should not be what you seek young padawan." });

@@ -10,7 +10,7 @@ namespace DDocsBackend.Data.Models
 {
     public class Authentication
     {
-        [Key]
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
         public ulong UserId { get; set; }
 
         public string? JWTRefreshToken { get; set; }
