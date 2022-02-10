@@ -141,7 +141,6 @@ internal class RestMethodInfo
     public async Task<RestResult> ExecuteAsync(RestModuleBase? instance, params object[] parameters)
         => await RunPreconditionsAsync(instance!) ?? await((Task<RestResult>?)this._info.Invoke(instance, parameters)!).ConfigureAwait(false);
 
-#pragma warning disable CS0162 // Unreachable code detected
     private async Task PopulateAuthenticationAsync(RestModuleBase instance)
     {
         try
@@ -158,7 +157,6 @@ internal class RestMethodInfo
             Logger.GetLogger<RestMethodInfo>().Warn("Failed to get auth", exception: x);
         }
     }
-#pragma warning restore CS0162 // Unreachable code detected
 
     private async Task<RestResult?> RunPreconditionsAsync(RestModuleBase instance)
     {
