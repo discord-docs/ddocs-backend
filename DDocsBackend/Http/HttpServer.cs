@@ -39,6 +39,7 @@ public class HttpServer : IHostedService
 
 #if DEBUG
         _listener.Prefixes.Add($"http://127.0.0.1:{port}/");
+        _listener.Prefixes.Add($"http://localhost:{port}/");
 #else
         _listener.Prefixes.Add($"http://*:{port}/");
 #endif
