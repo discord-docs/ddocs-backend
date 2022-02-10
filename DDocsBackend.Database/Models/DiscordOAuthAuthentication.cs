@@ -9,10 +9,10 @@ using System.Threading.Tasks;
 
 namespace DDocsBackend.Data.Models
 {
-    
+
     public class DiscordOAuthAuthentication
     {
-        [Key]
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
         public ulong UserId { get; set; }
 
         public string? AccessToken { get; set; }
