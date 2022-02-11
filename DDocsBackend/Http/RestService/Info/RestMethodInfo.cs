@@ -162,15 +162,7 @@ internal class RestMethodInfo
     {
         await PopulateAuthenticationAsync(instance);
 
-        if ((_requirePermissions != null || _requireAdmin != null) && instance.Authentication == null)
-        {
-            return RestResult.Unauthorized.WithData(new {reason = "Invalid authorization"});
-        }
-
-        if(_requirePermissions != null &&
-            instance.Authentication != null &&
-            _requirePermissions.RequireAuthor &&
-            !instance.Authentication.IsAuthor)
+        if((_requirePermissions?.RequireAuthor ?? false) && !(instance.Authentication?.IsAuthor ?? false))
         {
             return RestResult.Forbidden.WithData(new { reason = "Why are you here? This should not be what you seek young padawan." });
         }
