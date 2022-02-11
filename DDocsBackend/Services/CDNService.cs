@@ -33,6 +33,8 @@ namespace DDocsBackend.Services
 
     public class CDNService
     {
+        private readonly Logger _log;
+
 #if DEBUG
         public const string AssetDirectory = "./assets";
         public const string AvatarsDirectory = "./assets/avatars";
@@ -49,6 +51,8 @@ namespace DDocsBackend.Services
 
         public CDNService(DataAccessLayer dataAccessLayer)
         {
+            _log = Logger.GetLogger<CDNService>();
+
             Configuration.Default.MemoryAllocator = ArrayPoolMemoryAllocator.CreateWithMinimalPooling();
 
             _dataAccessLayer = dataAccessLayer;
@@ -89,7 +93,10 @@ namespace DDocsBackend.Services
             var dir = GetAssetDirectory(type);
 
             if (!File.Exists(dir + $"/{id}"))
+            {
+                _log.Debug($"{Logger.BuildColoredString("Asset not found", ConsoleColor.Red)}: [{type}] {dir + $"/{id}"}", Severity.CDN);
                 return null;
+            }
 
 
             (Image Image, IImageFormat Format) image;
@@ -100,6 +107,8 @@ namespace DDocsBackend.Services
             }
 
             var contentType = ImageHelper.GetContentType(image.Format);
+
+            _log.Debug($"Asset {dir + $"/{id}"} loaded", Severity.CDN);
 
             return new ReadResult(image.Image, contentType);
         }
@@ -112,10 +121,12 @@ namespace DDocsBackend.Services
             {
                 case ContentType.Jpeg:
                     await image.SaveAsJpegAsync(dir + $"/{id}").ConfigureAwait(false);
+                    _log.Debug($"Asset saved: {dir + $"/{id}"}", Severity.CDN);
                     break;
 
                 case ContentType.Png:
                     await image.SaveAsPngAsync(dir + $"/{id}").ConfigureAwait(false);
+                    _log.Debug($"Asset saved: {dir + $"/{id}"}", Severity.CDN);
                     break;
             }
         }

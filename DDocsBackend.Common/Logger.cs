@@ -19,6 +19,7 @@ public enum Severity
     Socket,
     Core,
     Database,
+    CDN
 }
 
 public enum StreamType
@@ -55,6 +56,8 @@ public class Logger
         { Severity.Info, ConsoleColor.White },
         { Severity.Trace, ConsoleColor.Yellow },
         { Severity.Database, ConsoleColor.Blue },
+        { Severity.CDN, ConsoleColor.Magenta },
+
     };
     public void Trace(string content, Severity severity = Severity.Core, Exception? exception = null, bool stdErr = false)
         => Write(content, exception, stdErr, severity, Severity.Trace);
