@@ -23,5 +23,8 @@ namespace DDocsBackend.RestModels
 
         [JsonProperty("isAuthor")]
         public bool IsAuthor { get; set; }
+
+        [JsonProperty("isAdmin")]
+        public bool IsAdmin { get; set; }
     }
 }

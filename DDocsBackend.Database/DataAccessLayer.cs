@@ -61,7 +61,7 @@ namespace DDocsBackend.Data
         {
             using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
 
-            return await context.Admins.FirstOrDefaultAsync(x => x.HashCredentials == credentials)
+            return await context.Admins.FirstOrDefaultAsync(x => EF.Functions.ILike(x.HashCredentials!, $"{credentials}"))
                 .ConfigureAwait(false);
         }
 

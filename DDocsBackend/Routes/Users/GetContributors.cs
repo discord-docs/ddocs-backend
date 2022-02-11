@@ -20,7 +20,6 @@ namespace DDocsBackend.Routes.Users
                 Username = x.Username,
                 Avatar = x.ProfilePicture!.Id,
                 Discriminator = x.Discriminator
-                
             }));
         }
     }

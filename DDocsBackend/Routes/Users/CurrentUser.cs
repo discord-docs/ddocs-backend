@@ -24,7 +24,8 @@ namespace DDocsBackend.Routes
                 Discriminator = result.Discriminator,
                 Id = result.UserId,
                 Username = result.Username,
-                IsAuthor = await DataAccessLayer.IsAuthorAsync(result.UserId).ConfigureAwait(false)
+                IsAuthor = Authentication.IsAuthor,
+                IsAdmin = Authentication.IsAdmin
             });
         }
     }
