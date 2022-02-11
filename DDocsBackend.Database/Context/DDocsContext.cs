@@ -24,7 +24,6 @@ namespace DDocsBackend.Data.Context
         public DbSet<Asset> Assets { get; set; }
         public DbSet<DiscordUserPfp> UserProfiles { get; set; }
         public DbSet<Admin> Admins { get; set; }
-        
         public DbSet<SiteContributor> SiteContributors { get; set; }
 
         private readonly Logger _log;

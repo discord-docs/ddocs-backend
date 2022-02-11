@@ -10,6 +10,7 @@ using DDocsBackend.Services;
 using DDocsBackend.Helpers;
 using Newtonsoft.Json;
 using DDocsBackend.Converters;
+using DDocsBackend.Data.Cached;
 
 Logger.AddStream(Console.OpenStandardOutput(), StreamType.StandardOut);
 Logger.AddStream(Console.OpenStandardError(), StreamType.StandardError);
@@ -33,7 +34,10 @@ try
         services
         .AddEntityFrameworkNpgsql()
         .AddDbContextFactory<DDocsContext>(x =>
-            x.UseNpgsql(context.Configuration["CONNECTION_STRING"]))
+            {
+                x.UseModel(DDocsContextModel.Instance);
+                x.UseNpgsql(context.Configuration["CONNECTION_STRING"]);
+            })
         .AddSingleton(x => new JsonSerializer { ContractResolver = new DDocsContractResolver() })
         .AddSingleton<DiscordBridgeService>()
         .AddSingleton<DataAccessLayer>()
